@@ -8,18 +8,11 @@ Upstream repository: https://github.com/szupie/supercontinents
 
 ## Present-day Earth imagery
 
-The reference-grade present-day renderer uses NASA Blue Marble Next Generation imagery for the daylight surface and NASA Black Marble imagery for the night-light layer. Those public-domain NASA datasets are loaded from mirrored copies in the `pjcigan/skyplothelper` example-data repository so the browser can request them with normal cross-origin texture loading. The original bundled Three.js Earth texture remains in the repository as a fallback used by the core/deep-time renderer.
+The final present-day renderer uses the Blue Marble and night-light Earth textures distributed in the open `vasturiano/three-globe` example assets. The Blue Marble imagery is based on NASA Visible Earth source material; the night texture provides the illuminated-night presentation used by the earthquake experience. The original bundled Three.js Earth texture remains in the repository as a fallback for the core and deep-time renderer.
 
-NASA Blue Marble source: https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/
-NASA Black Marble / night-lights source: https://earthobservatory.nasa.gov/features/NightLights
-Mirrored texture repository: https://github.com/pjcigan/skyplothelper
+Three-globe texture repository: https://github.com/vasturiano/three-globe
+NASA Blue Marble / Visible Earth: https://visibleearth.nasa.gov/images/57730/the-blue-marble-land-surface-ocean-color-and-sea-ice
 Original fallback texture repository: https://github.com/mrdoob/three.js
-
-## Cloud layer
-
-The reference-grade present-day renderer uses the `fair_clouds_4k.png` cloud texture from the open `turban/webgl-earth` project.
-
-Upstream repository: https://github.com/turban/webgl-earth
 
 ## NASA Scientific Visualization Studio / LRO Moon imagery
 
@@ -31,4 +24,4 @@ Credit: NASA's Scientific Visualization Studio / NASA Goddard; 2026 visualizatio
 
 ## Reference experience
 
-earth.ethanplus.ai is used only as a product/interaction reference. This repository is an independent implementation and does not copy the reference site's source code.
+earth.ethanplus.ai is used only as a product and interaction reference. This repository is an independent implementation and does not copy the reference site's source code.

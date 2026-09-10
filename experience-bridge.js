@@ -52,11 +52,24 @@
 
   restoreExperienceHero();
 
+  function loadReferencePolish() {
+    if (document.querySelector('script[data-reference-polish]')) return;
+    const polish = document.createElement('script');
+    polish.src = '/reference-polish.js';
+    polish.dataset.referencePolish = 'true';
+    document.body.appendChild(polish);
+  }
+
   function loadMoonFidelity() {
-    if (document.querySelector('script[data-moon-fidelity]')) return;
+    const existing = document.querySelector('script[data-moon-fidelity]');
+    if (existing) {
+      loadReferencePolish();
+      return;
+    }
     const moon = document.createElement('script');
     moon.src = '/moon-fidelity.js';
     moon.dataset.moonFidelity = 'true';
+    moon.addEventListener('load', loadReferencePolish, { once: true });
     document.body.appendChild(moon);
   }
 

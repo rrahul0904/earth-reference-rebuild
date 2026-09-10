@@ -9,10 +9,11 @@
   <title>earth. — Explore our planet</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/experiences.css" />
 </head>
 <body>
   <a class="skip-link" href="#story">Skip to story</a>
-  <main class="app" id="app" data-mode="natural" data-ready="false">
+  <main class="app" id="app" data-mode="natural" data-ready="false" data-experience="planet">
     <section class="viewport" aria-label="Interactive Earth">
       <canvas id="globe" aria-label="Interactive 3D Earth globe"></canvas>
       <canvas id="overlay" aria-hidden="true"></canvas>
@@ -167,5 +168,7 @@
   <script src="/app-3.js"></script>
   <script src="/app-4.js"></script>
   <script src="/app-5.js"></script>
+  <script src="/experiences.js"></script>
+  <script src="/experience-bridge.js"></script>
 </body>
 </html>

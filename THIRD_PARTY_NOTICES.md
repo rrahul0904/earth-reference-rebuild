@@ -12,12 +12,13 @@ The bundled present-day Earth texture is sourced from the Three.js examples repo
 
 Upstream repository: https://github.com/mrdoob/three.js
 
-## NASA Scientific Visualization Studio / LRO Moon Mosaic
+## NASA Scientific Visualization Studio / LRO Moon imagery
 
-The high-fidelity Moon view can load NASA Scientific Visualization Studio's `moon_mosaic_print.jpg`, a full-Moon photomosaic assembled from 1,231 Lunar Reconnaissance Orbiter Narrow Angle Camera images. The procedural Moon renderer remains as an offline fallback.
+The Moon experience uses NASA Scientific Visualization Studio lunar imagery derived from Lunar Reconnaissance Orbiter terrain and camera data. The final sharp overlay uses the 2026 Moon Phase and Libration plain full-disk preview to avoid visible photomosaic tile seams; the earlier LRO photomosaic and the procedural renderer remain available as fallback layers.
 
-Source page: https://svs.gsfc.nasa.gov/5001/
-Credit: NASA's Scientific Visualization Studio; visualization by Ernie Wright (USRA).
+2026 full-disk source page: https://svs.gsfc.nasa.gov/5587/
+LRO photomosaic source page: https://svs.gsfc.nasa.gov/5001/
+Credit: NASA's Scientific Visualization Studio / NASA Goddard; 2026 visualization by Ernie Wright (USRA) and the SVS team.
 
 ## Reference experience
 

@@ -52,13 +52,25 @@
 
   restoreExperienceHero();
 
-  // The reviewed fidelity pass intentionally initializes after the parser has
-  // loaded cinematic-overhaul.js so it can replace that first-pass artwork.
+  function loadMoonFidelity() {
+    if (document.querySelector('script[data-moon-fidelity]')) return;
+    const moon = document.createElement('script');
+    moon.src = '/moon-fidelity.js';
+    moon.dataset.moonFidelity = 'true';
+    document.body.appendChild(moon);
+  }
+
+  // Reviewed visual layers initialize after the parser-loaded first-pass renderer.
   setTimeout(() => {
-    if (document.querySelector('script[data-visual-fixes]')) return;
+    const existing = document.querySelector('script[data-visual-fixes]');
+    if (existing) {
+      loadMoonFidelity();
+      return;
+    }
     const script = document.createElement('script');
     script.src = '/visual-fixes.js';
     script.dataset.visualFixes = 'true';
+    script.addEventListener('load', loadMoonFidelity, { once: true });
     document.body.appendChild(script);
   }, 0);
 })();

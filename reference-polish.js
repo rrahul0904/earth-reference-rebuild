@@ -59,9 +59,13 @@
     const scene=document.querySelector('.reference-scene-canvas');
     if(scene)scene.style.opacity=(mode==='oceans'||mode==='moon')?'0':'1';
   }
-  function sparseStars(mult=.26){
+  function sparseStars(mult=.26,exclusions=[]){
     ctx.save();ctx.fillStyle='#eff7f3';
-    for(const s of stars){ctx.globalAlpha=s.a*mult;ctx.beginPath();ctx.arc(s.u*w,s.v*h,s.r,0,Math.PI*2);ctx.fill()}
+    for(const s of stars){
+      const px=s.u*w,py=s.v*h;
+      if(exclusions.some(c=>Math.hypot(px-c.x,py-c.y)<c.r))continue;
+      ctx.globalAlpha=s.a*mult;ctx.beginPath();ctx.arc(px,py,s.r,0,Math.PI*2);ctx.fill();
+    }
     ctx.restore();
   }
   function lonLerp(a,b,t){let d=b-a;if(d>180)d-=360;if(d<-180)d+=360;let v=a+d*t;if(v>180)v-=360;if(v<-180)v+=360;return v}
@@ -86,9 +90,9 @@
   function drawStrand(path,index,count,strong,t){
     const meta=strandNoise[index%strandNoise.length];
     ctx.save();ctx.globalCompositeOperation='screen';ctx.lineCap='round';ctx.lineJoin='round';
-    ctx.strokeStyle=strong?`rgba(76,211,202,${.075+meta.a*.052})`:`rgba(65,178,174,${.035+meta.a*.030})`;
-    ctx.lineWidth=(strong?.44:.28)*meta.w/.48;
-    ctx.shadowColor=strong?'rgba(87,236,222,.24)':'rgba(70,190,184,.10)';ctx.shadowBlur=strong?2.2:1;
+    ctx.strokeStyle=strong?`rgba(76,211,202,${.072+meta.a*.050})`:`rgba(65,178,174,${.032+meta.a*.028})`;
+    ctx.lineWidth=(strong?.42:.27)*meta.w/.48;
+    ctx.shadowColor=strong?'rgba(87,236,222,.22)':'rgba(70,190,184,.08)';ctx.shadowBlur=strong?2:1;
     ctx.beginPath();let begun=false;
     for(let i=0;i<=120;i++){
       const u=i/120,p=project(path,u,index,count);
@@ -100,21 +104,31 @@
     const movers=strong?5:2;
     for(let k=0;k<movers;k++){
       const u=(t*(strong?.028:.018)*meta.s+k/movers+index*.037)%1;
-      const p1=project(path,u,index,count),p2=project(path,Math.min(.999,u+.018),index,count);
+      const p1=project(path,u,index,count),p2=project(path,Math.min(.999,u+.014),index,count);
       if(!p1||!p2)continue;
-      ctx.strokeStyle=strong?'rgba(190,255,246,.72)':'rgba(122,225,215,.34)';
-      ctx.lineWidth=strong?.78:.45;ctx.shadowColor='rgba(139,255,239,.55)';ctx.shadowBlur=strong?4:2;
+      ctx.strokeStyle=strong?'rgba(183,252,242,.64)':'rgba(122,225,215,.30)';
+      ctx.lineWidth=strong?.70:.42;ctx.shadowColor='rgba(139,255,239,.48)';ctx.shadowBlur=strong?3.4:1.8;
       ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
-      ctx.fillStyle=strong?'rgba(224,255,250,.80)':'rgba(160,235,226,.42)';ctx.beginPath();ctx.arc(p2.x,p2.y,strong?.72:.42,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=strong?'rgba(220,255,249,.70)':'rgba(160,235,226,.36)';ctx.beginPath();ctx.arc(p2.x,p2.y,strong?.58:.38,0,Math.PI*2);ctx.fill();
     }
     ctx.restore();
   }
   function drawCurrentFamily(path,strong,t){
-    const count=strong?27:9;
+    const count=strong?29:9;
     for(let i=0;i<count;i++)drawStrand(path,i,count,strong,t);
   }
+  function drawOceanTint(L){
+    ctx.save();
+    const g=ctx.createRadialGradient(L.cx-L.radius*.22,L.cy-L.radius*.20,L.radius*.15,L.cx,L.cy,L.radius*1.03);
+    g.addColorStop(0,'rgba(0,34,46,.05)');g.addColorStop(.70,'rgba(0,25,39,.10)');g.addColorStop(1,'rgba(0,10,20,.22)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(L.cx,L.cy,L.radius,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(93,211,218,.10)';ctx.lineWidth=.7;ctx.beginPath();ctx.arc(L.cx,L.cy,L.radius+.4,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
   function drawOceans(t){
-    clear();sparseStars(.12);
+    clear();const L=typeof getSphereLayout==='function'?getSphereLayout():null;
+    if(L)drawOceanTint(L);
+    sparseStars(.10,L?[{x:L.cx,y:L.cy,r:L.radius*1.035}]:[]);
     const focus=active('ocean','global');
     Object.entries(currents).forEach(([name,path])=>{
       const match=focus==='global'||name===focus||(focus==='pacific'&&(name==='pacific'||name==='kuroshio'||name==='northPacific'))||(focus==='southern'&&name==='southern');
@@ -139,9 +153,10 @@
     ctx.strokeStyle='rgba(104,196,222,.38)';ctx.lineWidth=.65;ctx.beginPath();ctx.arc(cx,cy,r+.55,0,Math.PI*2);ctx.stroke();
   }
   function drawMoon(){
-    clear();sparseStars(.24);
+    clear();
     const mobile=w<=900,r=Math.min(w*(mobile?.36:.255),h*(mobile?.25:.40)),cx=mobile?w*.56:w*.63,cy=mobile?h*.30:h*.465;
     const er=r*(mobile?.105:.115),ex=cx-r*1.28,ey=cy-r*.69;
+    sparseStars(.24,[{x:cx,y:cy,r:r*1.02},{x:ex,y:ey,r:er*1.15}]);
     drawPhotographicMiniEarth(ex,ey,er);
   }
 

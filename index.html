@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#050708" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="A cinematic, interactive journey through 4.54 billion years of Earth history." />
+  <title>earth. — Explore our planet</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#story">Skip to story</a>
+  <main class="app" id="app" data-mode="natural" data-ready="false">
+    <section class="viewport" aria-label="Interactive Earth">
+      <canvas id="globe" aria-label="Interactive 3D Earth globe"></canvas>
+      <canvas id="overlay" aria-hidden="true"></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="loading" id="loading" role="status" aria-live="polite">
+        <div class="loading-word">earth.</div>
+        <div class="loading-line"><i id="loadingBar"></i></div>
+        <span id="loadingText">Preparing the planet</span>
+      </div>
+      <div class="webgl-fallback" id="fallback" hidden>
+        <div class="fallback-orb"></div>
+        <strong>Interactive Earth unavailable</strong>
+        <span>Your browser could not initialize WebGL. The timeline and story remain usable.</span>
+      </div>
+    </section>
+
+    <header class="topbar">
+      <button class="brand" id="brandButton" type="button" aria-label="Return to now">earth.</button>
+      <nav class="desktop-nav" aria-label="Experiences">
+        <button class="nav-link is-active" type="button" data-nav="earth">Earth</button>
+        <button class="nav-link" type="button" data-nav="record">Record</button>
+        <button class="nav-link" type="button" data-nav="life">Life</button>
+        <button class="nav-link" type="button" data-nav="people">People</button>
+        <button class="nav-link" type="button" data-nav="climate">Climate</button>
+        <button class="nav-link" type="button" data-nav="perspective">Perspective</button>
+      </nav>
+      <div class="top-actions">
+        <button class="sources-link" id="sourcesButton" type="button">Sources</button>
+        <button class="explore-button" id="exploreButton" type="button" aria-expanded="false" aria-controls="exploreMenu">Explore</button>
+      </div>
+    </header>
+
+    <section class="hero" id="story" aria-live="polite" aria-atomic="true">
+      <p class="eyebrow" id="eyebrow">A living archive</p>
+      <h1 id="storyTitle">Explore our planet.</h1>
+      <p class="dek" id="storyCopy">Travel through deep time, from a molten young world to the planet we know now.</p>
+      <div class="story-actions">
+        <button class="text-cta" id="backInTime" type="button">← Go back in time</button>
+        <button class="text-cta" id="readRecord" type="button">Read the record ↗</button>
+      </div>
+    </section>
+
+    <aside class="now-card" aria-label="Current timeline position">
+      <span class="label">Now</span>
+      <strong id="nowAge">Present day</strong>
+      <span id="nowEra">Holocene</span>
+    </aside>
+
+    <aside class="zoom-controls" aria-label="Zoom controls">
+      <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+      <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+    </aside>
+
+    <div class="interaction-hint" id="interactionHint" aria-hidden="true">Drag to orbit · scroll to zoom</div>
+
+    <footer class="control-dock">
+      <div class="transport">
+        <button id="prevStop" type="button" aria-label="Previous geological stop">←</button>
+        <button class="play" id="playButton" type="button" aria-label="Play Earth history"><span id="playIcon">▶</span></button>
+        <button id="nextStop" type="button" aria-label="Next geological stop">→</button>
+        <button class="speed" id="speedButton" type="button" aria-label="Change playback speed">1×</button>
+      </div>
+
+      <div class="timeline-wrap">
+        <div class="timeline-copy">
+          <span id="leftAge">4.54 billion years ago</span>
+          <strong id="centerAge">Present day</strong>
+          <span>Now</span>
+        </div>
+        <div class="timeline-track">
+          <div class="timeline-base"></div>
+          <div class="timeline-progress" id="timelineProgress"></div>
+          <div class="timeline-stops" id="timelineStops"></div>
+          <input id="timeline" type="range" min="0" max="10000" value="10000" aria-label="Scrub through Earth history" />
+        </div>
+      </div>
+
+      <div class="display-modes" role="group" aria-label="Earth display mode">
+        <button type="button" class="mode-button is-active" data-mode="natural">Natural</button>
+        <button type="button" class="mode-button" data-mode="dark">After dark</button>
+        <button type="button" class="mode-button" data-mode="blue">Blue hour</button>
+      </div>
+    </footer>
+
+    <div class="orbital-readout" aria-hidden="true">
+      <span id="coordLat">23.4° N</span>
+      <span id="coordLon">18.2° E</span>
+      <span id="distanceReadout">Orbit 1.00×</span>
+    </div>
+
+    <section class="mobile-sheet" aria-label="Earth story controls">
+      <button class="sheet-handle" id="sheetHandle" type="button" aria-expanded="false"><span></span></button>
+      <div class="mobile-story">
+        <span id="mobileAge">Present day</span>
+        <h2 id="mobileTitle">Explore our planet.</h2>
+        <p id="mobileCopy">Travel through deep time, from a molten young world to the planet we know now.</p>
+      </div>
+      <div class="mobile-controls">
+        <button id="mobilePrev" type="button">←</button>
+        <button id="mobilePlay" class="play" type="button">▶</button>
+        <button id="mobileNext" type="button">→</button>
+        <button id="mobileMode" type="button">Natural</button>
+      </div>
+      <div class="mobile-timeline"><input id="mobileTimeline" type="range" min="0" max="10000" value="10000" aria-label="Scrub through Earth history" /></div>
+    </section>
+
+    <aside class="drawer" id="exploreMenu" hidden>
+      <div class="drawer-head">
+        <span>Explore</span>
+        <button id="closeExplore" type="button" aria-label="Close explore menu">×</button>
+      </div>
+      <div class="drawer-grid">
+        <button data-nav="earth"><span>01</span><strong>Earth</strong><small>Deep time</small></button>
+        <button data-nav="record"><span>02</span><strong>Record</strong><small>Stone & ice</small></button>
+        <button data-nav="life"><span>03</span><strong>Life</strong><small>Evolution</small></button>
+        <button data-nav="people"><span>04</span><strong>People</strong><small>Dispersal</small></button>
+        <button data-nav="climate"><span>05</span><strong>Climate</strong><small>Cycles</small></button>
+        <button data-nav="perspective"><span>06</span><strong>Perspective</strong><small>One world</small></button>
+      </div>
+    </aside>
+
+    <dialog class="modal" id="recordDialog">
+      <form method="dialog" class="modal-shell">
+        <button class="modal-close" value="close" aria-label="Close">×</button>
+        <p class="eyebrow">Read the record</p>
+        <h2 id="recordTitle">Present day</h2>
+        <p id="recordBody"></p>
+        <dl id="recordFacts"></dl>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="sourcesDialog">
+      <form method="dialog" class="modal-shell sources-shell">
+        <button class="modal-close" value="close" aria-label="Close">×</button>
+        <p class="eyebrow">Sources & provenance</p>
+        <h2>Built on published reconstructions.</h2>
+        <p>Present-day imagery uses the Earth texture maintained in the Three.js examples. Paleogeographic raster slices and deep-time craton geometries are sourced from the open <em>Life & Supercontinents</em> reconstruction project, which credits PALEOMAP / C.R. Scotese for the raster maps and published Rodinia/Nuna reconstruction studies for older vector states.</p>
+        <ul>
+          <li>Raster reconstructions: 750 Ma → present</li>
+          <li>Vector craton reconstruction states: 760 Ma → 1,860 Ma</li>
+          <li>Timeline copy: high-level geological summaries, written for this implementation</li>
+          <li>Human dispersal paths: schematic, time-grown geographic routes</li>
+        </ul>
+        <p class="source-note">This experience is an independently implemented interpretation and is not affiliated with the reference site.</p>
+      </form>
+    </dialog>
+
+    <div class="sr-status" id="srStatus" aria-live="polite"></div>
+  </main>
+  <script src="/app-1.js"></script>
+  <script src="/app-2.js"></script>
+  <script src="/app-3.js"></script>
+  <script src="/app-4.js"></script>
+  <script src="/app-5.js"></script>
+</body>
+</html>

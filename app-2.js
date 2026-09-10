@@ -5,22 +5,28 @@ precision highp float;in vec2 vUv;out vec4 outColor;
 uniform vec2 uResolution;uniform vec2 uCenter;uniform float uRadius;uniform float uYaw;uniform float uPitch;uniform float uMix;uniform float uAge;uniform float uMode;uniform float uProcedural;uniform sampler2D uTexA;uniform sampler2D uTexB;
 #define PI 3.14159265359
 float hash21(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}
+float noise21(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float a=hash21(i),b=hash21(i+vec2(1.,0.)),c=hash21(i+vec2(0.,1.)),d=hash21(i+vec2(1.,1.));return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.52;for(int i=0;i<5;i++){v+=a*noise21(p);p=p*2.03+17.31;a*=.48;}return v;}
 mat3 rotX(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,-s,0.,s,c);}mat3 rotY(float a){float c=cos(a),s=sin(a);return mat3(c,0.,s,0.,1.,0.,-s,0.,c);}
-vec3 palette(float t){return mix(vec3(.10,.25,.28),vec3(.42,.46,.28),smoothstep(.2,.72,t));}
+vec3 palette(float t){return mix(vec3(.075,.17,.18),vec3(.33,.34,.22),smoothstep(.18,.80,t));}
 void main(){
   vec2 frag=vUv*uResolution;vec2 q=(frag-uCenter)/uRadius;q.y=-q.y;float r2=dot(q,q);
-  if(r2>1.){vec2 cell=floor(frag/3.);float h=hash21(cell);float star=step(.9965,h)*(0.35+0.65*hash21(cell+9.1));float haze=.018*(1.-length((frag/uResolution)-.5));outColor=vec4(vec3(star+haze),1.);return;}
+  if(r2>1.){vec2 cell=floor(frag/7.);float h=hash21(cell);float star=step(.9987,h)*(.22+.52*hash21(cell+9.1));float haze=.0025*max(0.,1.-length((frag/uResolution)-.5)*1.35);outColor=vec4(vec3(star+haze),1.);return;}
   float z=sqrt(max(0.,1.-r2));vec3 screenN=normalize(vec3(q.x,q.y,z));vec3 geoN=rotX(-uPitch)*rotY(-uYaw)*screenN;
   float lon=atan(geoN.z,geoN.x);float lat=asin(clamp(geoN.y,-1.,1.));vec2 uv=vec2(fract(lon/(2.*PI)+.5),lat/PI+.5);
   vec3 a=texture(uTexA,uv).rgb,b=texture(uTexB,uv).rgb;vec3 base=mix(a,b,uMix);
   if(uProcedural>.5){
-    float n=hash21(floor(uv*vec2(440.,220.)));float bands=sin((uv.y+n*.08)*32.)*.5+.5;float hot=smoothstep(1700.,4540.,uAge);vec3 ocean=vec3(.025,.10,.14);vec3 stone=palette(n*.7+bands*.3);base=mix(ocean,stone,smoothstep(.44,.58,n+bands*.12));base=mix(base,vec3(.58,.17,.045)*(1.1+.3*bands),hot*.82);
+    vec2 p=uv*vec2(7.2,3.6);float n=fbm(p);float n2=fbm(p*2.7+vec2(13.4,2.8));float ridges=1.-abs(2.*noise21(p*4.4)-1.);float hot=smoothstep(1700.,4540.,uAge);
+    vec3 ocean=vec3(.022,.075,.085);vec3 stone=palette(n*.76+n2*.24);float land=smoothstep(.48,.61,n+n2*.08);base=mix(ocean,stone,land);
+    float lava=smoothstep(.72,.92,ridges*n2)*hot;base=mix(base,vec3(.95,.22,.035),lava*.68);base=mix(base,vec3(.28,.075,.025),hot*.42);
   }
-  float ndl=max(0.,dot(screenN,normalize(vec3(-.34,.22,.91))));float light=.18+.88*ndl;float rim=pow(1.-z,2.6);
-  float snow=smoothstep(620.,760.,uAge)*(1.-smoothstep(780.,900.,uAge));base=mix(base,vec3(.72,.80,.82),snow*.48);
-  if(uMode>.5&&uMode<1.5){float city=pow(max(0.,base.r-base.b*.48),3.)*hash21(floor(uv*vec2(1100.,550.)));vec3 night=base*(.035+.18*ndl)+vec3(1.,.48,.13)*city*4.0;base=night;light=1.;}
-  if(uMode>1.5){base=mix(base,vec3(.12,.34,.48),.30);light=.32+.62*ndl;}
-  vec3 col=base*light;float ageHeat=smoothstep(3000.,4540.,uAge);col+=vec3(.75,.13,.02)*ageHeat*pow(max(0.,1.-z),1.6)*.38;col+=vec3(.18,.55,.78)*rim*(uMode>1.5?.42:.22);
+  vec3 sunDir=normalize(vec3(-.42,.26,.87));float ndl=max(0.,dot(screenN,sunDir));float soft=pow(ndl,.78);float light=.075+.96*soft;float rim=pow(1.-z,3.4);float edge=pow(1.-z,8.0);
+  float snow=smoothstep(620.,760.,uAge)*(1.-smoothstep(780.,900.,uAge));base=mix(base,vec3(.72,.80,.82),snow*.44);
+  if(uMode>.5&&uMode<1.5){float city=pow(max(0.,base.r-base.b*.48),3.)*hash21(floor(uv*vec2(1100.,550.)));vec3 night=base*(.018+.11*soft)+vec3(1.,.47,.12)*city*3.2;base=night;light=1.;}
+  if(uMode>1.5){base=mix(base,vec3(.075,.27,.37),.24);light=.17+.73*soft;}
+  base=pow(max(base,vec3(0.)),vec3(.93));vec3 col=base*light;
+  float ageHeat=smoothstep(3000.,4540.,uAge);col+=vec3(.88,.18,.025)*ageHeat*pow(max(0.,1.-z),2.0)*.20;
+  vec3 atm=uMode>1.5?vec3(.20,.68,.86):vec3(.25,.61,.78);col+=atm*rim*(uMode>1.5?.30:.15)+atm*edge*.15;
   float alpha=smoothstep(1.,.985,z+.01);outColor=vec4(col,alpha);
 }`;
 

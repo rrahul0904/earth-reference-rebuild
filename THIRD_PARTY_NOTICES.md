@@ -12,6 +12,13 @@ The bundled present-day Earth texture is sourced from the Three.js examples repo
 
 Upstream repository: https://github.com/mrdoob/three.js
 
+## NASA Scientific Visualization Studio / LRO Moon Mosaic
+
+The high-fidelity Moon view can load NASA Scientific Visualization Studio's `moon_mosaic_print.jpg`, a full-Moon photomosaic assembled from 1,231 Lunar Reconnaissance Orbiter Narrow Angle Camera images. The procedural Moon renderer remains as an offline fallback.
+
+Source page: https://svs.gsfc.nasa.gov/5001/
+Credit: NASA's Scientific Visualization Studio; visualization by Ernie Wright (USRA).
+
 ## Reference experience
 
 earth.ethanplus.ai is used only as a product/interaction reference. This repository is an independent implementation and does not copy the reference site's source code.

@@ -35,6 +35,10 @@ async function switchExperience(page, name) {
   await page.waitForTimeout(250);
 }
 
+async function expectSharpMoonReady(page) {
+  await expect(page.locator('.moon-fidelity-canvas')).toHaveAttribute('data-ready','true',{timeout:15000});
+}
+
 test('desktop planet renders and deep-time controls work', async ({ page }) => {
   const errors = await desktopReady(page);
   await expect(page.locator('#storyTitle')).toHaveText('Explore our planet.');
@@ -60,6 +64,7 @@ test('desktop orbit and Moon reference modes work', async ({ page }) => {
   await expect(page.locator('#experiencePanel')).toContainText('Humanity in orbit.');
   await switchExperience(page,'moon');
   await expect(page.locator('#storyTitle')).toHaveText('Another world. Within reach.');
+  await expectSharpMoonReady(page);
   await page.locator('[data-exp-control="moon-apollo17"]').click();
   await expect(page.locator('#storyTitle')).toHaveText('A geologist. Another world.');
   await expect(page.locator('#experiencePanel')).toContainText('11 DEC 1972');
@@ -101,6 +106,7 @@ test('mobile navigation exposes and switches reference-video modes', async ({ pa
   await expect(page.locator('#app')).toHaveAttribute('data-experience','moon');
   await expect(page.locator('#experienceFooter')).toBeVisible();
   await expect(page.locator('#storyTitle')).toHaveText('Another world. Within reach.');
+  await expectSharpMoonReady(page);
   await page.screenshot({ path: 'test-results/mobile-moon.png', fullPage: true });
   await page.locator('#exploreButton').click();
   await page.locator('#exploreMenu [data-experience-nav="oceans"]').click();

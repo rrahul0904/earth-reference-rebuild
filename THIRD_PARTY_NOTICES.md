@@ -6,11 +6,20 @@ Bundled paleogeographic raster frames and the craton reconstruction data were ta
 
 Upstream repository: https://github.com/szupie/supercontinents
 
-## Three.js example Earth texture
+## Present-day Earth imagery
 
-The bundled present-day Earth texture is sourced from the Three.js examples repository.
+The reference-grade present-day renderer uses NASA Blue Marble Next Generation imagery for the daylight surface and NASA Black Marble imagery for the night-light layer. Those public-domain NASA datasets are loaded from mirrored copies in the `pjcigan/skyplothelper` example-data repository so the browser can request them with normal cross-origin texture loading. The original bundled Three.js Earth texture remains in the repository as a fallback used by the core/deep-time renderer.
 
-Upstream repository: https://github.com/mrdoob/three.js
+NASA Blue Marble source: https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-topography-bathymetry/
+NASA Black Marble / night-lights source: https://earthobservatory.nasa.gov/features/NightLights
+Mirrored texture repository: https://github.com/pjcigan/skyplothelper
+Original fallback texture repository: https://github.com/mrdoob/three.js
+
+## Cloud layer
+
+The reference-grade present-day renderer uses the `fair_clouds_4k.png` cloud texture from the open `turban/webgl-earth` project.
+
+Upstream repository: https://github.com/turban/webgl-earth
 
 ## NASA Scientific Visualization Studio / LRO Moon imagery
 

@@ -52,11 +52,24 @@
 
   restoreExperienceHero();
 
+  function loadReferenceFinalizer() {
+    if (document.querySelector('script[data-reference-finalizer]')) return;
+    const finalizer = document.createElement('script');
+    finalizer.src = '/reference-finalizer.js';
+    finalizer.dataset.referenceFinalizer = 'true';
+    document.body.appendChild(finalizer);
+  }
+
   function loadReferencePolish() {
-    if (document.querySelector('script[data-reference-polish]')) return;
+    const existing = document.querySelector('script[data-reference-polish]');
+    if (existing) {
+      loadReferenceFinalizer();
+      return;
+    }
     const polish = document.createElement('script');
     polish.src = '/reference-polish.js';
     polish.dataset.referencePolish = 'true';
+    polish.addEventListener('load', loadReferenceFinalizer, { once: true });
     document.body.appendChild(polish);
   }
 

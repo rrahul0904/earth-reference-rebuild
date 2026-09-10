@@ -19,10 +19,10 @@ async function expectRenderedGlobe(page) {
   expect(unique.size).toBeGreaterThan(2);
 }
 
-async function expectReferenceEarthReady(page) {
+async function expectFinalEarthReady(page) {
   await expect(page.locator('#app')).toHaveAttribute('data-visual-grade','reference-v3',{timeout:15000});
-  await expect(page.locator('.reference-earth-canvas')).toHaveAttribute('data-ready','true',{timeout:45000});
-  await expect(page.locator('#app')).toHaveAttribute('data-hires-earth','true');
+  await expect(page.locator('.final-earth-canvas')).toHaveAttribute('data-ready','true',{timeout:45000});
+  await expect(page.locator('#app')).toHaveAttribute('data-final-earth','true');
 }
 
 async function desktopReady(page) {
@@ -32,21 +32,21 @@ async function desktopReady(page) {
   const response = await page.goto('/');
   expect(response?.status()).toBe(200);
   await expectRenderedGlobe(page);
-  await expectReferenceEarthReady(page);
+  await expectFinalEarthReady(page);
   return errors;
 }
 
 async function switchExperience(page, name) {
   await page.locator(`.desktop-nav [data-experience-nav="${name}"]`).click();
   await expect(page.locator('#app')).toHaveAttribute('data-experience', name);
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(650);
 }
 
 async function expectSharpMoonReady(page) {
   await expect(page.locator('.moon-fidelity-canvas')).toHaveAttribute('data-ready','true',{timeout:15000});
 }
 
-test('desktop planet uses the reference-grade photographic renderer and deep-time still works', async ({ page }) => {
+test('desktop planet uses the final photographic Earth and deep-time still works', async ({ page }) => {
   const errors = await desktopReady(page);
   await expect(page.locator('#storyTitle')).toHaveText('Explore our planet.');
   await expect(page.locator('.control-dock')).toBeVisible();
@@ -54,18 +54,19 @@ test('desktop planet uses the reference-grade photographic renderer and deep-tim
   const presentRadius = await page.evaluate(() => getSphereLayout().radius);
   expect(presentRadius).toBeGreaterThan(180);
   expect(presentRadius).toBeLessThan(290);
+  await expect(page.locator('.final-earth-canvas')).toHaveCSS('opacity','1');
   await page.screenshot({ path: 'test-results/00-planet-present.png', fullPage: true });
   await page.locator('button[data-mode="dark"]').click();
   await expect(page.locator('#app')).toHaveAttribute('data-mode','dark');
   await page.locator('#backInTime').click();
   await expect(page.locator('#nowAge')).toContainText('4.54');
   await expect(page.locator('#storyTitle')).toHaveText('A world begins.');
-  await expect(page.locator('.reference-earth-canvas')).toHaveCSS('opacity','0');
+  await expect(page.locator('.final-earth-canvas')).toHaveCSS('opacity','0');
   await page.screenshot({ path: 'test-results/desktop-success.png', fullPage: true });
   expect(errors).toEqual([]);
 });
 
-test('desktop orbit is a true system overview and Moon remains sharp', async ({ page }) => {
+test('desktop orbit is a true system overview and Moon has no legacy ghost layer', async ({ page }) => {
   const errors = await desktopReady(page);
   await switchExperience(page,'orbit');
   await expect(page.locator('#storyTitle')).toHaveText('A world in orbit.');
@@ -80,6 +81,7 @@ test('desktop orbit is a true system overview and Moon remains sharp', async ({ 
   await switchExperience(page,'moon');
   await expect(page.locator('#storyTitle')).toHaveText('Another world. Within reach.');
   await expectSharpMoonReady(page);
+  await expect(page.locator('#experienceCanvas')).toHaveCSS('display','none');
   await page.locator('[data-exp-control="moon-apollo17"]').click();
   await expect(page.locator('#storyTitle')).toHaveText('A geologist. Another world.');
   await expect(page.locator('#experiencePanel')).toContainText('11 DEC 1972');
@@ -87,7 +89,7 @@ test('desktop orbit is a true system overview and Moon remains sharp', async ({ 
   expect(errors).toEqual([]);
 });
 
-test('desktop solar, earthquake and ocean reference modes work with the v3 renderer', async ({ page }) => {
+test('desktop solar, earthquake and ocean modes use the final scene stack', async ({ page }) => {
   const errors = await desktopReady(page);
   await switchExperience(page,'solar');
   await expect(page.locator('#storyTitle')).toHaveText('Everything in motion.');
@@ -98,24 +100,24 @@ test('desktop solar, earthquake and ocean reference modes work with the v3 rende
   await expect(page.locator('#storyTitle')).toContainText('Earthquakes');
   await page.locator('[data-exp-control="quake-japan"]').click();
   await expect(page.locator('#experiencePanel')).toContainText('M 9.1');
-  await expect(page.locator('.reference-earth-canvas')).toHaveCSS('opacity','1');
+  await expect(page.locator('.final-earth-canvas')).toHaveCSS('opacity','1');
   await page.screenshot({ path: 'test-results/04-earthquakes-japan.png', fullPage: true });
   await switchExperience(page,'oceans');
   await expect(page.locator('#storyTitle')).toHaveText('An ocean. Always moving.');
   await page.locator('[data-exp-control="ocean-gulf"]').click();
   await expect(page.locator('#experiencePanel')).toContainText('Gulf Stream');
-  await expect(page.locator('.reference-earth-canvas')).toHaveCSS('opacity','1');
+  await expect(page.locator('.final-earth-canvas')).toHaveCSS('opacity','1');
   await page.screenshot({ path: 'test-results/05-oceans-gulf.png', fullPage: true });
   expect(errors).toEqual([]);
 });
 
-test('mobile navigation exposes reference modes with the high-resolution Earth layer available', async ({ page }) => {
+test('mobile navigation exposes reference modes with the final photographic Earth available', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   await page.goto('/');
   await expectRenderedGlobe(page);
-  await expectReferenceEarthReady(page);
+  await expectFinalEarthReady(page);
   await expect(page.locator('#exploreButton')).toBeVisible();
   await expect(page.locator('.mobile-sheet')).toBeVisible();
   await page.locator('#exploreButton').click();

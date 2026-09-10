@@ -20,7 +20,7 @@ async function expectRenderedGlobe(page) {
 }
 
 async function switchExperience(page, name) {
-  await page.locator(`[data-experience-nav="${name}"]`).first().click();
+  await page.locator(`.desktop-nav [data-experience-nav="${name}"]`).click();
   await expect(page.locator('#app')).toHaveAttribute('data-experience', name);
 }
 
@@ -33,7 +33,7 @@ test('desktop Earth renders and reference-video experience suite works', async (
   await expectRenderedGlobe(page);
   await expect(page.locator('#storyTitle')).toHaveText('Explore our planet.');
   await expect(page.locator('.control-dock')).toBeVisible();
-  await expect(page.locator('[data-experience-nav="orbit"]')).toBeVisible();
+  await expect(page.locator('.desktop-nav [data-experience-nav="orbit"]')).toBeVisible();
 
   await switchExperience(page,'orbit');
   await expect(page.locator('#storyTitle')).toHaveText('A world in orbit.');
@@ -85,7 +85,7 @@ test('mobile navigation exposes and switches all reference-video modes', async (
 
   await page.locator('#exploreButton').click();
   await expect(page.locator('#exploreMenu')).toBeVisible();
-  await expect(page.locator('[data-experience-nav="moon"]')).toBeVisible();
+  await expect(page.locator('#exploreMenu [data-experience-nav="moon"]')).toBeVisible();
   await page.locator('#exploreMenu [data-experience-nav="moon"]').click();
   await expect(page.locator('#app')).toHaveAttribute('data-experience','moon');
   await expect(page.locator('#experienceFooter')).toBeVisible();

@@ -50,6 +50,15 @@
     restoreExperienceHero();
   };
 
-  // A companion mode can already be active when this bridge initializes.
   restoreExperienceHero();
+
+  // The reviewed fidelity pass intentionally initializes after the parser has
+  // loaded cinematic-overhaul.js so it can replace that first-pass artwork.
+  setTimeout(() => {
+    if (document.querySelector('script[data-visual-fixes]')) return;
+    const script = document.createElement('script');
+    script.src = '/visual-fixes.js';
+    script.dataset.visualFixes = 'true';
+    document.body.appendChild(script);
+  }, 0);
 })();

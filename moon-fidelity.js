@@ -7,6 +7,7 @@
   const canvas=document.createElement('canvas');
   canvas.className='moon-fidelity-canvas';
   canvas.setAttribute('aria-hidden','true');
+  canvas.dataset.ready='false';
   Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',zIndex:'9'});
   viewport.insertBefore(canvas,document.querySelector('.vignette'));
   const ctx=canvas.getContext('2d',{alpha:true});
@@ -65,7 +66,8 @@
     }
   }
 
-  image.addEventListener('load',render);
+  image.addEventListener('load',()=>{canvas.dataset.ready='true';render()});
+  image.addEventListener('error',()=>{canvas.dataset.ready='error'});
   addEventListener('resize',resize);
   new MutationObserver(render).observe(app,{attributes:true,attributeFilter:['data-experience']});
   document.addEventListener('click',e=>{if(e.target.closest('[data-exp-control^="moon-"]'))setTimeout(render,0)});

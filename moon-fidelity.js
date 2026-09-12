@@ -7,13 +7,14 @@
   const canvas=document.createElement('canvas');
   canvas.className='moon-fidelity-canvas';
   canvas.setAttribute('aria-hidden','true');
-  canvas.dataset.ready='false';
+  canvas.dataset.ready='idle';
   Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',zIndex:'9'});
   viewport.insertBefore(canvas,document.querySelector('.vignette'));
   const ctx=canvas.getContext('2d',{alpha:true});
   const image=new Image();
   image.decoding='async';
-  let w=innerWidth,h=innerHeight,dpr=1,useFallback=false,loadSettled=false;
+  const IMAGE_URL='https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005587/preview_plain.jpg';
+  let w=innerWidth,h=innerHeight,dpr=1,useFallback=false,loadSettled=false,loadStarted=false,fallbackTimer=null;
 
   function seeded(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
   const rnd=seeded(5587);
@@ -77,19 +78,25 @@
     }
   }
 
-  const fallbackTimer=setTimeout(()=>{
-    if(loadSettled)return;
-    useFallback=true;
-    canvas.dataset.ready='fallback';
-    app.dataset.moonSource='fallback-timeout';
-    render();
-  },4500);
+  function startLoad(){
+    if(loadStarted||loadSettled)return;
+    loadStarted=true;
+    canvas.dataset.ready='loading';
+    fallbackTimer=setTimeout(()=>{
+      if(loadSettled)return;
+      useFallback=true;
+      canvas.dataset.ready='fallback';
+      app.dataset.moonSource='fallback-timeout';
+      render();
+    },4500);
+    image.src=IMAGE_URL;
+  }
 
-  image.addEventListener('load',()=>{loadSettled=true;clearTimeout(fallbackTimer);useFallback=false;canvas.dataset.ready='true';app.dataset.moonSource='nasa';render()});
-  image.addEventListener('error',()=>{loadSettled=true;clearTimeout(fallbackTimer);useFallback=true;canvas.dataset.ready='fallback';app.dataset.moonSource='fallback';render()});
-  image.src='https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005587/preview_plain.jpg';
+  image.addEventListener('load',()=>{loadSettled=true;if(fallbackTimer)clearTimeout(fallbackTimer);useFallback=false;canvas.dataset.ready='true';app.dataset.moonSource='nasa';render()});
+  image.addEventListener('error',()=>{loadSettled=true;if(fallbackTimer)clearTimeout(fallbackTimer);useFallback=true;canvas.dataset.ready='fallback';app.dataset.moonSource='fallback';render()});
   addEventListener('resize',resize);
-  new MutationObserver(render).observe(app,{attributes:true,attributeFilter:['data-experience']});
+  new MutationObserver(()=>{if(app.dataset.experience==='moon')startLoad();render()}).observe(app,{attributes:true,attributeFilter:['data-experience']});
   document.addEventListener('click',e=>{if(e.target.closest('[data-exp-control^="moon-"]'))setTimeout(render,0)});
+  if(app.dataset.experience==='moon')startLoad();
   resize();
 })();

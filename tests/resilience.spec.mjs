@@ -36,10 +36,7 @@ test('Moon remains functional when NASA image fails', async ({ page }) => {
 test('Moon falls back when NASA image request stalls', async ({ page }) => {
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
-  await page.route('https://svs.gsfc.nasa.gov/**', async route => {
-    await new Promise(resolve => setTimeout(resolve, 8000));
-    await route.abort();
-  });
+  await page.route('https://svs.gsfc.nasa.gov/**', () => new Promise(() => {}));
   await openMoon(page);
   await expect(page.locator('#app')).toHaveAttribute('data-moon-source','fallback-timeout',{timeout:7000});
   await expectFallbackMoonRendered(page);

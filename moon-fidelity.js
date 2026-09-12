@@ -13,7 +13,6 @@
   const ctx=canvas.getContext('2d',{alpha:true});
   const image=new Image();
   image.decoding='async';
-  image.src='https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005587/preview_plain.jpg';
   let w=innerWidth,h=innerHeight,dpr=1,useFallback=false,loadSettled=false;
 
   function seeded(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
@@ -88,6 +87,7 @@
 
   image.addEventListener('load',()=>{loadSettled=true;clearTimeout(fallbackTimer);useFallback=false;canvas.dataset.ready='true';app.dataset.moonSource='nasa';render()});
   image.addEventListener('error',()=>{loadSettled=true;clearTimeout(fallbackTimer);useFallback=true;canvas.dataset.ready='fallback';app.dataset.moonSource='fallback';render()});
+  image.src='https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005587/preview_plain.jpg';
   addEventListener('resize',resize);
   new MutationObserver(render).observe(app,{attributes:true,attributeFilter:['data-experience']});
   document.addEventListener('click',e=>{if(e.target.closest('[data-exp-control^="moon-"]'))setTimeout(render,0)});

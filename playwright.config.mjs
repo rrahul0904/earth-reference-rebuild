@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: '**/browser.spec.mjs',
+  testMatch: '**/*.spec.mjs',
   timeout: 240_000,
   expect: { timeout: 10_000 },
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],

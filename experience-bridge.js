@@ -52,11 +52,37 @@
 
   restoreExperienceHero();
 
+  function loadReferenceFinalizer() {
+    if (document.querySelector('script[data-reference-finalizer]')) return;
+    const finalizer = document.createElement('script');
+    finalizer.src = '/reference-finalizer.js';
+    finalizer.dataset.referenceFinalizer = 'true';
+    document.body.appendChild(finalizer);
+  }
+
+  function loadReferencePolish() {
+    const existing = document.querySelector('script[data-reference-polish]');
+    if (existing) {
+      loadReferenceFinalizer();
+      return;
+    }
+    const polish = document.createElement('script');
+    polish.src = '/reference-polish.js';
+    polish.dataset.referencePolish = 'true';
+    polish.addEventListener('load', loadReferenceFinalizer, { once: true });
+    document.body.appendChild(polish);
+  }
+
   function loadMoonFidelity() {
-    if (document.querySelector('script[data-moon-fidelity]')) return;
+    const existing = document.querySelector('script[data-moon-fidelity]');
+    if (existing) {
+      loadReferencePolish();
+      return;
+    }
     const moon = document.createElement('script');
     moon.src = '/moon-fidelity.js';
     moon.dataset.moonFidelity = 'true';
+    moon.addEventListener('load', loadReferencePolish, { once: true });
     document.body.appendChild(moon);
   }
 

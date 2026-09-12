@@ -6,11 +6,13 @@ Bundled paleogeographic raster frames and the craton reconstruction data were ta
 
 Upstream repository: https://github.com/szupie/supercontinents
 
-## Three.js example Earth texture
+## Present-day Earth imagery
 
-The bundled present-day Earth texture is sourced from the Three.js examples repository.
+The final present-day renderer uses the Blue Marble and night-light Earth textures distributed in the open `vasturiano/three-globe` example assets. The Blue Marble imagery is based on NASA Visible Earth source material; the night texture provides the illuminated-night presentation used by the earthquake experience. The original bundled Three.js Earth texture remains in the repository as a fallback for the core and deep-time renderer.
 
-Upstream repository: https://github.com/mrdoob/three.js
+Three-globe texture repository: https://github.com/vasturiano/three-globe
+NASA Blue Marble / Visible Earth: https://visibleearth.nasa.gov/images/57730/the-blue-marble-land-surface-ocean-color-and-sea-ice
+Original fallback texture repository: https://github.com/mrdoob/three.js
 
 ## NASA Scientific Visualization Studio / LRO Moon imagery
 
@@ -22,4 +24,4 @@ Credit: NASA's Scientific Visualization Studio / NASA Goddard; 2026 visualizatio
 
 ## Reference experience
 
-earth.ethanplus.ai is used only as a product/interaction reference. This repository is an independent implementation and does not copy the reference site's source code.
+earth.ethanplus.ai is used only as a product and interaction reference. This repository is an independent implementation and does not copy the reference site's source code.

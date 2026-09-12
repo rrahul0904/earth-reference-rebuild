@@ -14,9 +14,8 @@
 
   let w=innerWidth,h=innerHeight,dpr=1,phase=0,last=0;
   const blueMarble=new Image();
-  blueMarble.crossOrigin='anonymous';
   blueMarble.decoding='async';
-  blueMarble.src='https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+  blueMarble.src='/assets/earth/earth_atmos_2048.jpg';
   blueMarble.addEventListener('load',()=>{canvas.dataset.ready='true';app.dataset.referencePolish='true';});
   blueMarble.addEventListener('error',()=>{canvas.dataset.ready='fallback';app.dataset.referencePolish='fallback';});
 

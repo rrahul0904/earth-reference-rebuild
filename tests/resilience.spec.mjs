@@ -22,6 +22,21 @@ async function expectFallbackMoonRendered(page) {
   await expect(page.locator('#storyTitle')).toHaveText('Another world. Within reach.');
 }
 
+test('Earth is ready even when optional remote night imagery fails', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  await page.route('https://raw.githubusercontent.com/vasturiano/three-globe/**', route => route.abort());
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
+  expect(response?.status()).toBe(200);
+  await page.waitForFunction(() => document.querySelector('#app')?.dataset.ready === 'true');
+  await expect(page.locator('.final-earth-canvas')).toHaveAttribute('data-ready','true',{timeout:10000});
+  await expect(page.locator('#app')).toHaveAttribute('data-day-earth','bundled');
+  await expect(page.locator('#app')).toHaveAttribute('data-night-earth','day-fallback');
+  await expect(page.locator('#app')).toHaveAttribute('data-final-earth','true');
+  expect(errors).toEqual([]);
+});
+
 test('Moon remains functional when NASA image fails', async ({ page }) => {
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));

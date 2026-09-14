@@ -8,6 +8,7 @@ const visualCss = fs.readFileSync(new URL('visual-overhaul.css', root), 'utf8');
 const js = [1,2,3,4,5].map(i=>fs.readFileSync(new URL('app-' + i + '.js', root),'utf8')).join('\n');
 const experiences = fs.readFileSync(new URL('experiences.js', root),'utf8');
 const bridge = fs.readFileSync(new URL('experience-bridge.js', root),'utf8');
+const shareState = fs.readFileSync(new URL('share-state.js', root),'utf8');
 const cinematic = fs.readFileSync(new URL('cinematic-overhaul.js', root),'utf8');
 const visualFixes = fs.readFileSync(new URL('visual-fixes.js', root),'utf8');
 const moon = fs.readFileSync(new URL('moon-fidelity.js', root),'utf8');
@@ -42,9 +43,13 @@ assert.ok(polish.includes('reference-polish-canvas'), 'organic ocean / mini-Eart
 assert.ok(polish.includes('drawCurrentFamily'), 'organic ocean current family renderer missing');
 assert.ok(finalizer.includes('reference-finalizer-canvas'), 'final reference composition layer missing');
 assert.ok(finalizer.includes('drawOceanShade'), 'reference ocean lighting pass missing');
-for (const file of ['visual-fixes.js','moon-fidelity.js','reference-polish.js','reference-finalizer.js']) {
+for (const file of ['visual-fixes.js','moon-fidelity.js','reference-polish.js','reference-finalizer.js','share-state.js']) {
   assert.ok(bridge.includes('/' + file), 'experience bridge must load ' + file);
 }
+assert.ok(shareState.includes("const PREF_KEY = 'earth.preferences.v1'"), 'display preference persistence missing');
+assert.ok(shareState.includes("window.addEventListener('popstate'"), 'browser history restoration missing');
+assert.ok(shareState.includes("button.id = 'shareStateButton'"), 'share control missing');
+assert.ok(shareState.includes('DEFAULT_VIEWS'), 'default experience subview restoration missing');
 
 const timelineFns = js.slice(js.indexOf('function clamp'), js.indexOf('function formatAge'));
 const timeline = new Function(timelineFns + '; return {ageToSlider, sliderToAge};')();

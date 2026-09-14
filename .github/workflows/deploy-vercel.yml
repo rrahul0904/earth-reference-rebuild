@@ -1,0 +1,105 @@
+name: deploy-vercel
+
+on:
+  workflow_run:
+    workflows: [quality]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.head_branch == 'main'
+        )
+      }}
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_zmEezpOKGZy2sH5nqTfO44LD
+      VERCEL_PROJECT_ID: prj_UL4T4q0fiT7KdEKoBLai6i44E4YS
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Resolve release revision
+        id: revision
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check deployment authorization
+        id: auth
+        shell: bash
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "## Production deployment skipped"
+              echo
+              echo "Repository certification passed, but the VERCEL_TOKEN GitHub Actions secret is not configured."
+              echo "No production mutation was attempted."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Check out certified revision
+        if: steps.auth.outputs.available == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.revision.outputs.sha }}
+
+      - name: Set up Node
+        if: steps.auth.outputs.available == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Vercel CLI
+        if: steps.auth.outputs.available == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Pull production configuration
+        if: steps.auth.outputs.available == 'true'
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Deploy certified revision to production
+        if: steps.auth.outputs.available == 'true'
+        id: deploy
+        shell: bash
+        run: |
+          url="$(vercel deploy --prod --yes --token="$VERCEL_TOKEN")"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Production deployment"
+            echo
+            echo "Certified revision: \`${{ steps.revision.outputs.sha }}\`"
+            echo "Deployment: $url"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify canonical production URL
+        if: steps.auth.outputs.available == 'true'
+        shell: bash
+        run: |
+          for attempt in {1..12}; do
+            status="$(curl --silent --show-error --output /tmp/production.html --write-out '%{http_code}' https://earth-reference-rebuild.vercel.app/ || true)"
+            if [ "$status" = "200" ] && grep -q '<div id="app"' /tmp/production.html; then
+              echo "Canonical production URL is serving the application."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Canonical production verification failed." >&2
+          exit 1

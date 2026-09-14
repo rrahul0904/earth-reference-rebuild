@@ -9,6 +9,10 @@
   let interactionTransition = false;
   let lastSerialized = '';
 
+  function isEarthView(exp = state.experience) {
+    return exp === 'planet' || exp === 'civilization';
+  }
+
   function activeView() {
     return document.querySelector('#experiencePills [data-exp-control].active')?.dataset.expControl || '';
   }
@@ -18,7 +22,7 @@
     const exp = VALID_EXPERIENCES.has(state.experience) ? state.experience : 'planet';
     p.set('exp', exp);
     if (VALID_MODES.has(state.mode)) p.set('mode', state.mode);
-    if (exp === 'planet' || exp === 'civilization') p.set('age', Number(state.ageMa || 0).toFixed(6).replace(/0+$/,'').replace(/\.$/,''));
+    if (isEarthView(exp)) p.set('age', Number(state.ageMa || 0).toFixed(6).replace(/0+$/,'').replace(/\.$/,''));
     const view = activeView();
     if (view && view !== DEFAULT_VIEWS[exp]) p.set('view', view);
     return p;
@@ -39,7 +43,8 @@
     catch { return {}; }
   }
 
-  function savePrefs() {
+  function saveEarthPrefs() {
+    if (!isEarthView()) return;
     try { localStorage.setItem(PREF_KEY, JSON.stringify({ mode: state.mode })); }
     catch {}
   }
@@ -59,15 +64,16 @@
       const prefs = readPrefs();
       const exp = VALID_EXPERIENCES.has(p.get('exp')) ? p.get('exp') : 'planet';
       const explicitMode = VALID_MODES.has(p.get('mode')) ? p.get('mode') : null;
-      const mode = explicitMode || (((exp === 'planet' || exp === 'civilization') && VALID_MODES.has(prefs.mode)) ? prefs.mode : null);
-      const age = Number(p.get('age'));
+      const mode = explicitMode || ((isEarthView(exp) && VALID_MODES.has(prefs.mode)) ? prefs.mode : null);
+      const ageValue = p.get('age');
+      const age = ageValue === null ? 0 : Number(ageValue);
       const view = p.get('view');
 
       if (state.experience !== exp) clickSelector(`[data-experience-nav="${CSS.escape(exp)}"]`);
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
       if (mode && state.mode !== mode) setMode(mode);
-      if ((exp === 'planet' || exp === 'civilization') && Number.isFinite(age)) setAge(clamp(age,0,MAX_AGE_MA));
+      if (isEarthView(exp) && Number.isFinite(age)) setAge(clamp(age,0,MAX_AGE_MA));
 
       const controlValue = view || DEFAULT_VIEWS[exp];
       if (controlValue) {
@@ -75,7 +81,7 @@
         if (candidate && !candidate.classList.contains('active')) candidate.click();
       }
 
-      savePrefs();
+      if (isEarthView(exp)) saveEarthPrefs();
       lastSerialized = currentParams().toString();
       if (initial || !location.hash) {
         const next = `${location.pathname}${location.search}#${lastSerialized}`;
@@ -127,14 +133,14 @@
   const baseSetMode = setMode;
   setMode = function productizedSetMode(mode) {
     baseSetMode(mode);
-    savePrefs();
+    if (isEarthView()) saveEarthPrefs();
     if (!interactionTransition) queueMicrotask(() => writeUrl('replace'));
   };
 
   const baseSetAge = setAge;
   setAge = function productizedSetAge(age, options = {}) {
     baseSetAge(age, options);
-    if (!interactionTransition && (state.experience === 'planet' || state.experience === 'civilization')) queueMicrotask(() => writeUrl('replace'));
+    if (!interactionTransition && isEarthView()) queueMicrotask(() => writeUrl('replace'));
   };
 
   document.addEventListener('click', event => {

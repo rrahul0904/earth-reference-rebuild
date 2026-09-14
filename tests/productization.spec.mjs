@@ -36,7 +36,7 @@ test('browser history restores default and focused experience subviews', async (
   await expect(page.locator('#storyTitle')).toHaveText('Explore our planet.');
 });
 
-test('planet display preference persists without overriding experience defaults', async ({ page }) => {
+test('planet display preference persists without being overwritten by experience defaults', async ({ page }) => {
   await page.goto('/#exp=planet&mode=dark&age=66');
   await waitForShareState(page);
   await expect(page.locator('#app')).toHaveAttribute('data-mode','dark');
@@ -51,6 +51,14 @@ test('planet display preference persists without overriding experience defaults'
   await waitForShareState(page);
   await expect(page.locator('#app')).toHaveAttribute('data-experience','oceans');
   await expect(page.locator('#app')).toHaveAttribute('data-mode','blue');
+
+  const persisted = await page.evaluate(() => JSON.parse(localStorage.getItem('earth.preferences.v1') || '{}'));
+  expect(persisted.mode).toBe('dark');
+
+  await page.goto('/');
+  await waitForShareState(page);
+  await expect(page.locator('#app')).toHaveAttribute('data-experience','planet');
+  await expect(page.locator('#app')).toHaveAttribute('data-mode','dark');
 });
 
 test('Share control publishes the current exact state URL', async ({ page, context }) => {

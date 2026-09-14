@@ -2,36 +2,12 @@
    timeline updates underneath a reference-video mode. Loaded after experiences.js. */
 (() => {
   const HERO_BY_EXPERIENCE = {
-    civilization: {
-      eyebrow: 'Human journeys',
-      title: 'A world becoming connected.',
-      copy: 'Follow broad dispersal routes as people move across continents and coastlines through the late Pleistocene.'
-    },
-    orbit: {
-      eyebrow: '01 / A world in orbit',
-      title: 'A world in orbit.',
-      copy: 'Thousands of objects circle the planet. Explore the orbital infrastructure surrounding our home.'
-    },
-    moon: {
-      eyebrow: '02 / Our celestial companion',
-      title: 'Another world. Within reach.',
-      copy: 'A landscape written by impacts. Explore the Moon through a sequence of landmark missions and places.'
-    },
-    earthquakes: {
-      eyebrow: '03 / The ground is moving',
-      title: 'Earthquakes. A planet in motion.',
-      copy: 'Every signal is a recorded disturbance. Together they trace the restless edges and interiors of a changing planet.'
-    },
-    oceans: {
-      eyebrow: '04 / A planet connected by water',
-      title: 'An ocean. Always moving.',
-      copy: 'Beneath a familiar blue surface, water is always on the move. Follow the currents that connect our ocean basins.'
-    },
-    solar: {
-      eyebrow: '05 / Beyond our world',
-      title: 'Everything in motion.',
-      copy: 'Eight worlds. One star. A celestial dance shaped by gravity and time.'
-    }
+    civilization: { eyebrow: 'Human journeys', title: 'A world becoming connected.', copy: 'Follow broad dispersal routes as people move across continents and coastlines through the late Pleistocene.' },
+    orbit: { eyebrow: '01 / A world in orbit', title: 'A world in orbit.', copy: 'Thousands of objects circle the planet. Explore the orbital infrastructure surrounding our home.' },
+    moon: { eyebrow: '02 / Our celestial companion', title: 'Another world. Within reach.', copy: 'A landscape written by impacts. Explore the Moon through a sequence of landmark missions and places.' },
+    earthquakes: { eyebrow: '03 / The ground is moving', title: 'Earthquakes. A planet in motion.', copy: 'Every signal is a recorded disturbance. Together they trace the restless edges and interiors of a changing planet.' },
+    oceans: { eyebrow: '04 / A planet connected by water', title: 'An ocean. Always moving.', copy: 'Beneath a familiar blue surface, water is always on the move. Follow the currents that connect our ocean basins.' },
+    solar: { eyebrow: '05 / Beyond our world', title: 'Everything in motion.', copy: 'Eight worlds. One star. A celestial dance shaped by gravity and time.' }
   };
 
   function restoreExperienceHero() {
@@ -49,7 +25,6 @@
     geologicalSetAge(age, options);
     restoreExperienceHero();
   };
-
   restoreExperienceHero();
 
   function loadReferenceFinalizer() {
@@ -62,10 +37,7 @@
 
   function loadReferencePolish() {
     const existing = document.querySelector('script[data-reference-polish]');
-    if (existing) {
-      loadReferenceFinalizer();
-      return;
-    }
+    if (existing) { loadReferenceFinalizer(); return; }
     const polish = document.createElement('script');
     polish.src = '/reference-polish.js';
     polish.dataset.referencePolish = 'true';
@@ -75,10 +47,7 @@
 
   function loadMoonFidelity() {
     const existing = document.querySelector('script[data-moon-fidelity]');
-    if (existing) {
-      loadReferencePolish();
-      return;
-    }
+    if (existing) { loadReferencePolish(); return; }
     const moon = document.createElement('script');
     moon.src = '/moon-fidelity.js';
     moon.dataset.moonFidelity = 'true';
@@ -86,11 +55,19 @@
     document.body.appendChild(moon);
   }
 
-  // Reviewed visual layers initialize after the parser-loaded first-pass renderer.
+  function loadShareState() {
+    if (document.querySelector('script[data-share-state]')) return;
+    const share = document.createElement('script');
+    share.src = '/share-state.js';
+    share.dataset.shareState = 'true';
+    document.body.appendChild(share);
+  }
+
   setTimeout(() => {
     const existing = document.querySelector('script[data-visual-fixes]');
     if (existing) {
       loadMoonFidelity();
+      loadShareState();
       return;
     }
     const script = document.createElement('script');
@@ -98,5 +75,6 @@
     script.dataset.visualFixes = 'true';
     script.addEventListener('load', loadMoonFidelity, { once: true });
     document.body.appendChild(script);
+    loadShareState();
   }, 0);
 })();

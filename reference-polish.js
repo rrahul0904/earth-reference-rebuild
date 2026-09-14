@@ -13,10 +13,11 @@
   const ctx=canvas.getContext('2d',{alpha:true});
 
   let w=innerWidth,h=innerHeight,dpr=1,phase=0,last=0;
+  const OCEAN_SAMPLE_STEPS=72;
+  const OCEAN_FRAME_MS=45;
   const blueMarble=new Image();
-  blueMarble.crossOrigin='anonymous';
   blueMarble.decoding='async';
-  blueMarble.src='https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+  blueMarble.src='/assets/earth/earth_atmos_2048.jpg';
   blueMarble.addEventListener('load',()=>{canvas.dataset.ready='true';app.dataset.referencePolish='true';});
   blueMarble.addEventListener('error',()=>{canvas.dataset.ready='fallback';app.dataset.referencePolish='fallback';});
 
@@ -94,14 +95,14 @@
     ctx.lineWidth=(strong?.42:.27)*meta.w/.48;
     ctx.shadowColor=strong?'rgba(87,236,222,.22)':'rgba(70,190,184,.08)';ctx.shadowBlur=strong?2:1;
     ctx.beginPath();let begun=false;
-    for(let i=0;i<=120;i++){
-      const u=i/120,p=project(path,u,index,count);
+    for(let i=0;i<=OCEAN_SAMPLE_STEPS;i++){
+      const u=i/OCEAN_SAMPLE_STEPS,p=project(path,u,index,count);
       if(!p){begun=false;continue}
       if(!begun){ctx.moveTo(p.x,p.y);begun=true}else ctx.lineTo(p.x,p.y);
     }
     ctx.stroke();ctx.shadowBlur=0;
 
-    const movers=strong?5:2;
+    const movers=strong?4:1;
     for(let k=0;k<movers;k++){
       const u=(t*(strong?.028:.018)*meta.s+k/movers+index*.037)%1;
       const p1=project(path,u,index,count),p2=project(path,Math.min(.999,u+.014),index,count);
@@ -114,7 +115,7 @@
     ctx.restore();
   }
   function drawCurrentFamily(path,strong,t){
-    const count=strong?29:9;
+    const count=strong?18:6;
     for(let i=0;i<count;i++)drawStrand(path,i,count,strong,t);
   }
   function drawOceanTint(L){
@@ -161,7 +162,7 @@
   }
 
   function frame(now){
-    if(now-last<30){requestAnimationFrame(frame);return}
+    if(now-last<OCEAN_FRAME_MS){requestAnimationFrame(frame);return}
     const dt=Math.min(.08,(now-last)/1000||0);last=now;phase+=dt;
     const mode=app.dataset.experience||state.experience||'planet';hideLegacyForPolishedMode(mode);
     if(mode==='oceans')drawOceans(phase);else if(mode==='moon')drawMoon();else clear();

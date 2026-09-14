@@ -32,8 +32,10 @@ for (const phrase of ['A world in orbit.','Another world. Within reach.','Everyt
 assert.ok(experienceCss.includes('.experience-footer'), 'experience controls styling missing');
 
 assert.ok(cinematic.includes('final-earth-canvas'), 'final photographic Earth canvas missing');
-assert.ok(cinematic.includes('earth-blue-marble.jpg'), 'Blue Marble source missing');
-assert.ok(cinematic.includes('earth-night.jpg'), 'photographic night source missing');
+assert.ok(cinematic.includes('/assets/earth/earth_atmos_2048.jpg'), 'bundled Earth texture missing from critical rendering path');
+assert.ok(cinematic.includes("app.dataset.dayEarth='bundled'"), 'bundled Earth readiness marker missing');
+assert.ok(cinematic.includes('earth-night.jpg'), 'optional photographic night source missing');
+assert.ok(cinematic.includes("app.dataset.nightEarth='day-fallback'"), 'night texture fallback contract missing');
 assert.ok(visualFixes.includes('reference-scene-canvas'), 'reference companion renderer missing');
 assert.ok(moon.includes('moon-fidelity-canvas'), 'sharp Moon fidelity layer missing');
 assert.ok(polish.includes('reference-polish-canvas'), 'organic ocean / mini-Earth polish layer missing');

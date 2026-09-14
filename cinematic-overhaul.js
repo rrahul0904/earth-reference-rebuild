@@ -97,9 +97,22 @@
       const pos=gl.getAttribLocation(program,'aPosition');gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
       ['uResolution','uCenter','uRadius','uYaw','uPitch','uMode','uDay','uNight'].forEach(n=>loc[n]=gl.getUniformLocation(program,n));
       gl.uniform1i(loc.uDay,0);gl.uniform1i(loc.uNight,1);
-      const base='https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/';
-      [dayTex,nightTex]=await Promise.all([loadTexture(base+'earth-blue-marble.jpg'),loadTexture(base+'earth-night.jpg')]);
+
+      // The critical rendering path is fully repository-local. Night imagery is
+      // an optional enhancement and never blocks the Earth from becoming usable.
+      dayTex=await loadTexture('/assets/earth/earth_atmos_2048.jpg');
+      nightTex=dayTex;
+      app.dataset.dayEarth='bundled';
+      app.dataset.nightEarth='day-fallback';
       ready=true;canvas.dataset.ready='true';app.dataset.finalEarth='true';resize();
+
+      const nightUrl='https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-night.jpg';
+      loadTexture(nightUrl).then(texture=>{
+        nightTex=texture;
+        app.dataset.nightEarth='photographic';
+      }).catch(()=>{
+        app.dataset.nightEarth='day-fallback';
+      });
     }catch(e){canvas.dataset.ready='error';console.warn('Final photographic Earth unavailable; reference fallback remains active.',e)}
   }
 

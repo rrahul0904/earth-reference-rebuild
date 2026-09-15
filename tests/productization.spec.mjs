@@ -72,3 +72,37 @@ test('Share control publishes the current exact state URL', async ({ page, conte
   expect(clipboard).toContain('#exp=solar');
   expect(clipboard).toContain('view=solar-jupiter');
 });
+
+test('Share remains available on a mobile viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/#exp=planet&mode=natural&age=0');
+  await waitForShareState(page);
+  await expect(page.locator('#shareStateButton')).toBeVisible();
+});
+
+test('non-state fragments do not reset the active experience', async ({ page }) => {
+  await page.goto('/#exp=moon&view=moon-apollo17');
+  await waitForShareState(page);
+  await expect(page.locator('#app')).toHaveAttribute('data-experience','moon');
+  await page.evaluate(() => { location.hash = 'story'; });
+  await page.waitForTimeout(100);
+  await expect(page.locator('#app')).toHaveAttribute('data-experience','moon');
+  expect(page.url()).toContain('#story');
+});
+
+test('civilization keeps its default age when age is omitted', async ({ page }) => {
+  await page.goto('/#exp=civilization');
+  await waitForShareState(page);
+  await expect(page.locator('#app')).toHaveAttribute('data-experience','civilization');
+  await expect(page.locator('#nowAge')).toContainText('125,000');
+});
+
+test('card shortcut writes its focused earthquake subview to history', async ({ page }) => {
+  await page.goto('/#exp=earthquakes');
+  await waitForShareState(page);
+  await page.locator('[data-card-action="quake"]').click();
+  await expect(page.locator('[data-exp-control="quake-japan"]')).toHaveClass(/active/);
+  await expect.poll(() => page.url()).toContain('view=quake-japan');
+  await page.goBack();
+  await expect(page.locator('[data-exp-control="quake-all"]')).toHaveClass(/active/);
+});

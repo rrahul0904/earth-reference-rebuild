@@ -8,6 +8,7 @@
   let applyingUrl = false;
   let interactionTransition = false;
   let lastSerialized = '';
+  let ageWriteTimer = null;
 
   function isEarthView(exp = state.experience) {
     return exp === 'planet' || exp === 'civilization';
@@ -15,6 +16,12 @@
 
   function activeView() {
     return document.querySelector('#experiencePills [data-exp-control].active')?.dataset.expControl || '';
+  }
+
+  function isStateFragment(hash = location.hash) {
+    if (!hash) return true;
+    const p = new URLSearchParams(hash.replace(/^#/,''));
+    return p.has('exp') || p.has('mode') || p.has('age') || p.has('view');
   }
 
   function currentParams() {
@@ -38,6 +45,22 @@
     history[kind === 'push' ? 'pushState' : 'replaceState']({ earthState: serialized }, '', next);
   }
 
+  function scheduleAgeWrite() {
+    if (ageWriteTimer) return;
+    ageWriteTimer = setTimeout(() => {
+      ageWriteTimer = null;
+      writeUrl('replace');
+    }, 120);
+  }
+
+  function flushAgeWrite() {
+    if (ageWriteTimer) {
+      clearTimeout(ageWriteTimer);
+      ageWriteTimer = null;
+    }
+    writeUrl('replace');
+  }
+
   function readPrefs() {
     try { return JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); }
     catch { return {}; }
@@ -57,7 +80,7 @@
   }
 
   async function applyUrl({ initial = false } = {}) {
-    if (applyingUrl) return;
+    if (applyingUrl || !isStateFragment()) return;
     applyingUrl = true;
     try {
       const p = new URLSearchParams(location.hash.replace(/^#/,''));
@@ -65,15 +88,15 @@
       const exp = VALID_EXPERIENCES.has(p.get('exp')) ? p.get('exp') : 'planet';
       const explicitMode = VALID_MODES.has(p.get('mode')) ? p.get('mode') : null;
       const mode = explicitMode || ((isEarthView(exp) && VALID_MODES.has(prefs.mode)) ? prefs.mode : null);
-      const ageValue = p.get('age');
-      const age = ageValue === null ? 0 : Number(ageValue);
+      const hasAge = p.has('age');
+      const age = hasAge ? Number(p.get('age')) : null;
       const view = p.get('view');
 
       if (state.experience !== exp) clickSelector(`[data-experience-nav="${CSS.escape(exp)}"]`);
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
       if (mode && state.mode !== mode) setMode(mode);
-      if (isEarthView(exp) && Number.isFinite(age)) setAge(clamp(age,0,MAX_AGE_MA));
+      if (isEarthView(exp) && hasAge && Number.isFinite(age)) setAge(clamp(age,0,MAX_AGE_MA));
 
       const controlValue = view || DEFAULT_VIEWS[exp];
       if (controlValue) {
@@ -99,12 +122,12 @@
     const button = document.createElement('button');
     button.id = 'shareStateButton';
     button.type = 'button';
-    button.className = 'sources-link';
+    button.className = 'sources-link share-state-button';
     button.textContent = 'Share';
     button.setAttribute('aria-label','Copy a link to this exact Earth view');
     actions.insertBefore(button, actions.firstChild);
     button.addEventListener('click', async () => {
-      writeUrl('replace');
+      flushAgeWrite();
       const url = location.href;
       let copied = false;
       try {
@@ -140,19 +163,20 @@
   const baseSetAge = setAge;
   setAge = function productizedSetAge(age, options = {}) {
     baseSetAge(age, options);
-    if (!interactionTransition && isEarthView()) queueMicrotask(() => writeUrl('replace'));
+    if (!interactionTransition && isEarthView()) scheduleAgeWrite();
   };
 
   document.addEventListener('click', event => {
     if (applyingUrl) return;
-    if (event.target.closest('[data-experience-nav], [data-exp-control]')) interactionTransition = true;
+    if (event.target.closest('[data-experience-nav], [data-exp-control], [data-card-action]')) interactionTransition = true;
   }, true);
 
   document.addEventListener('click', event => {
     if (applyingUrl) return;
     const nav = event.target.closest('[data-experience-nav]');
     const control = event.target.closest('[data-exp-control]');
-    if (nav || control) {
+    const cardAction = event.target.closest('[data-card-action]');
+    if (nav || control || cardAction) {
       setTimeout(() => {
         interactionTransition = false;
         writeUrl('push');

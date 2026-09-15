@@ -46,37 +46,33 @@ jobs:
           if [ -n "$VERCEL_TOKEN" ]; then
             echo "available=true" >> "$GITHUB_OUTPUT"
           else
-            echo "available=false" >> "$GITHUB_OUTPUT"
             {
-              echo "## Production deployment skipped"
+              echo "## Production deployment blocked"
               echo
               echo "Repository certification passed, but the VERCEL_TOKEN GitHub Actions secret is not configured."
-              echo "No production mutation was attempted."
+              echo "No production mutation was attempted. This release is not complete."
             } >> "$GITHUB_STEP_SUMMARY"
+            echo "VERCEL_TOKEN is required for production deployment." >&2
+            exit 1
           fi
 
       - name: Check out certified revision
-        if: steps.auth.outputs.available == 'true'
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.revision.outputs.sha }}
 
       - name: Set up Node
-        if: steps.auth.outputs.available == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
       - name: Install Vercel CLI
-        if: steps.auth.outputs.available == 'true'
-        run: npm install --global vercel@latest
+        run: npm install --global vercel@59.16.0
 
       - name: Pull production configuration
-        if: steps.auth.outputs.available == 'true'
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
       - name: Deploy certified revision to production
-        if: steps.auth.outputs.available == 'true'
         id: deploy
         shell: bash
         run: |
@@ -90,7 +86,6 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify canonical production URL
-        if: steps.auth.outputs.available == 'true'
         shell: bash
         run: |
           for attempt in {1..12}; do

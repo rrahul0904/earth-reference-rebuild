@@ -23,7 +23,7 @@
     region:'global',
     hoverPlace:null,
     last:performance.now(),
-    sim:{ altitudeKm:420, inclinationDeg:51.6, elapsed:0, playing:true, speed:1, track:false },
+    sim:{ enabled:false, altitudeKm:420, inclinationDeg:51.6, elapsed:0, playing:true, speed:1, track:false },
     story:{ playing:false, time:0, speed:1, scene:-1, lastScene:-1 },
     pointer:null
   };
@@ -366,7 +366,7 @@
   }
 
   function drawOrbitSimulation(){
-    if(state.experience!=='orbit')return;
+    if(!runtime.sim.enabled || state.experience!=='orbit')return;
     var L=getSphereLayout(),alt=runtime.sim.altitudeKm;
     var normalized=Math.min(1.8,.23+alt/42000);
     var rx=L.radius*(1.18+normalized*.55),ry=rx*(.17+.22*Math.cos(runtime.sim.inclinationDeg*Math.PI/180));
@@ -454,7 +454,7 @@
       dataTime:Number(runtime.dataTime.toFixed(4)),
       region:runtime.region,
       selectedPlace:runtime.selectedPlace?runtime.selectedPlace.id:null,
-      orbit:{altitudeKm:runtime.sim.altitudeKm,inclinationDeg:runtime.sim.inclinationDeg,periodSeconds:Number(orbitPeriodSeconds(runtime.sim.altitudeKm).toFixed(3))},
+      orbit:{enabled:runtime.sim.enabled,altitudeKm:runtime.sim.altitudeKm,inclinationDeg:runtime.sim.inclinationDeg,periodSeconds:Number(orbitPeriodSeconds(runtime.sim.altitudeKm).toFixed(3))},
       story:{time:Number(runtime.story.time.toFixed(3)),scene:runtime.story.scene,playing:runtime.story.playing}
     };
   }
@@ -593,7 +593,7 @@
   }
 
   function setOrbitPreset(alt,inc){
-    runtime.sim.altitudeKm=alt;runtime.sim.inclinationDeg=inc;runtime.sim.elapsed=0;runtime.sim.playing=true;
+    runtime.sim.enabled=true;runtime.sim.altitudeKm=alt;runtime.sim.inclinationDeg=inc;runtime.sim.elapsed=0;runtime.sim.playing=true;
     refreshSimulationUI();showToast('Orbit preset loaded');
   }
 
@@ -764,8 +764,8 @@
       snapshot:snapshot,
       selectCity:function(id){var p=CITIES.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'city'},p),true);return !!p;},
       selectMoonLandmark:function(id){var p=MOON_LANDMARKS.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'moon'},p),true);return !!p;},
-      setOrbit:function(altitudeKm,inclinationDeg){runtime.sim.altitudeKm=Math.max(160,Number(altitudeKm)||420);runtime.sim.inclinationDeg=Math.max(0,Math.min(180,Number(inclinationDeg)||0));runtime.sim.elapsed=0;refreshSimulationUI();return snapshot().orbit;},
-      setSimulationTime:function(seconds){runtime.sim.elapsed=Math.max(0,Number(seconds)||0);return snapshot().orbit;},
+      setOrbit:function(altitudeKm,inclinationDeg){runtime.sim.enabled=true;runtime.sim.altitudeKm=Math.max(160,Number(altitudeKm)||420);runtime.sim.inclinationDeg=Math.max(0,Math.min(180,Number(inclinationDeg)||0));runtime.sim.elapsed=0;refreshSimulationUI();return snapshot().orbit;},
+      setSimulationTime:function(seconds){runtime.sim.enabled=true;runtime.sim.elapsed=Math.max(0,Number(seconds)||0);return snapshot().orbit;},
       predictOrbit:function(altitudeKm,samples){return predictOrbit(altitudeKm,samples);},
       setRegion:function(region){var allowed=['global','americas','europe','africa-middle-east','asia-pacific'];runtime.region=allowed.indexOf(region)>=0?region:'global';var select=drawer&&drawer.querySelector('#convergenceRegion');if(select)select.value=runtime.region;updateMetrics();return runtime.region;},
       listLayers:function(){return Array.from(layerRegistry.values()).map(function(x){return {id:x.id,label:x.label,description:x.description};});},

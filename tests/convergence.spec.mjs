@@ -14,6 +14,8 @@ test('consolidated Earth systems explorer loads without changing the default exp
   await expect(page.locator('#convergenceDrawer')).toBeVisible();
   await expect(page.locator('[data-layer]')).toHaveCount(7);
   await expect(page.locator('#convergenceMetricLayers')).toHaveText('0');
+  const baseSnapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
+  expect(baseSnapshot.orbit.enabled).toBe(false);
   await page.screenshot({ path: 'test-results/20-convergence-layers.png', fullPage: true });
 });
 
@@ -56,6 +58,7 @@ test('Moonstake-derived landmark exploration integrates with the existing Moon e
 test('Orbital Speeders-derived simulation computes a physical orbital period and replays in Orbit', async ({ page }) => {
   await ready(page);
   const orbit = await page.evaluate(() => window.EarthConvergence.setOrbit(420, 51.6));
+  expect(orbit.enabled).toBe(true);
   expect(orbit.altitudeKm).toBe(420);
   expect(orbit.inclinationDeg).toBeCloseTo(51.6, 1);
   expect(orbit.periodSeconds).toBeGreaterThan(5400);

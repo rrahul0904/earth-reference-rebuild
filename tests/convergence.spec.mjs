@@ -12,7 +12,7 @@ test('consolidated Earth systems explorer loads without changing the default exp
   await expect(page.locator('#convergenceTrigger')).toBeVisible();
   await page.locator('#convergenceTrigger').click();
   await expect(page.locator('#convergenceDrawer')).toBeVisible();
-  await expect(page.locator('[data-layer]')).toHaveCount(5);
+  await expect(page.locator('[data-layer]')).toHaveCount(7);
   await expect(page.locator('#convergenceMetricLayers')).toHaveText('0');
   await page.screenshot({ path: 'test-results/20-convergence-layers.png', fullPage: true });
 });
@@ -28,6 +28,13 @@ test('geospatial layer registry toggles deterministic data layers', async ({ pag
   await page.locator('#convergenceDataTime').evaluate(el => { el.value = '500'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   const timeSnapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
   expect(timeSnapshot.dataTime).toBeCloseTo(0.5, 2);
+
+  await page.locator('[data-layer="heatmap"]').click();
+  await page.locator('[data-layer="clusters"]').click();
+  await page.locator('#convergenceRegion').selectOption('americas');
+  const filtered = await page.evaluate(() => window.EarthConvergence.snapshot());
+  expect(filtered.region).toBe('americas');
+  expect(filtered.activeLayers).toEqual(['cities', 'clusters', 'heatmap', 'migration']);
 });
 
 test('Moonstake-derived landmark exploration integrates with the existing Moon experience', async ({ page }) => {
@@ -61,8 +68,17 @@ test('Orbital Speeders-derived simulation computes a physical orbital period and
   await expect(page.locator('#convergenceOrbitAltitude')).toHaveText('35,786 km');
   await expect(page.locator('#convergenceOrbitPeriod')).toContainText('h');
 
+  await page.locator('#convergenceSimTrack').click();
+  await expect(page.locator('#convergenceSimTrack')).toHaveClass(/active/);
+  await expect(page.locator('#convergenceSimTrack')).toContainText('Tracking');
+
   const snapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
   expect(snapshot.activeLayers).toContain('groundtrack');
+  const frozen = await page.evaluate(() => {
+    window.EarthConvergence.setSimulationTime(42);
+    return window.EarthConvergence.snapshot();
+  });
+  expect(frozen.orbit.altitudeKm).toBe(35786);
 });
 
 test('semantic renderAt timeline deterministically orchestrates existing experiences', async ({ page }) => {
@@ -91,6 +107,10 @@ test('city selection reuses globe interaction without importing game or marketpl
   expect(selected).toBeTruthy();
   await expect(page.locator('#app')).toHaveAttribute('data-convergence-selected', 'cairo');
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
+  await page.locator('#convergenceTrigger').click();
+  await page.locator('[data-convergence-tab="places"]').click();
+  await expect(page.locator('#convergencePlaceDetail')).toContainText('Historic Cairo');
+  await expect(page.locator('#convergencePlaceDetail')).toContainText('Modern metropolitan system');
 
   const body = await page.locator('body').innerText();
   expect(body).not.toContain('Buy land');

@@ -123,6 +123,11 @@
 
   function visibleByTime(item){return item.time===undefined || item.time<=runtime.dataTime+.0001;}
   function regionBucket(item){
+    var named=String(item.region||'').toLowerCase();
+    if(named.indexOf('north america')>=0||named.indexOf('south america')>=0)return 'americas';
+    if(named.indexOf('africa')>=0||named.indexOf('middle east')>=0)return 'africa-middle-east';
+    if(named.indexOf('europe')>=0)return 'europe';
+    if(named.indexOf('asia')>=0||named.indexOf('oceania')>=0)return 'asia-pacific';
     var lon=Number(item.lon)||0,lat=Number(item.lat)||0;
     if(lon>=60 || lon<=-150)return 'asia-pacific';
     if(lon<-25)return 'americas';

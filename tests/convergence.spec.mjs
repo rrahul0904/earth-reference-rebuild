@@ -61,6 +61,12 @@ test('Orbital Speeders-derived simulation computes a physical orbital period and
   expect(orbit.periodSeconds).toBeGreaterThan(5400);
   expect(orbit.periodSeconds).toBeLessThan(5700);
 
+  const prediction = await page.evaluate(() => window.EarthConvergence.predictOrbit(420, 180));
+  expect(prediction.points).toHaveLength(181);
+  expect(prediction.periodSeconds).toBeGreaterThan(5400);
+  expect(prediction.periodSeconds).toBeLessThan(5700);
+  expect(Math.abs(prediction.points[0].x - prediction.points.at(-1).x)).toBeLessThan(100);
+
   await page.locator('#convergenceTrigger').click();
   await page.locator('[data-convergence-tab="simulation"]').click();
   await page.locator('[data-orbit-preset="geo"]').click();

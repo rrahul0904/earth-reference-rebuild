@@ -61,6 +61,11 @@ jobs:
         with:
           ref: ${{ steps.revision.outputs.sha }}
 
+      - name: Stamp certified revision
+        shell: bash
+        run: |
+          printf '{"sha":"%s"}\n' "${{ steps.revision.outputs.sha }}" > release.json
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -85,16 +90,45 @@ jobs:
             echo "Deployment: $url"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Verify canonical production URL
+      - name: Verify deployed revision
         shell: bash
         run: |
+          expected='{"sha":"${{ steps.revision.outputs.sha }}"}'
+          deployment="${{ steps.deploy.outputs.url }}"
           for attempt in {1..12}; do
-            status="$(curl --silent --show-error --output /tmp/production.html --write-out '%{http_code}' https://earth-reference-rebuild.vercel.app/ || true)"
-            if [ "$status" = "200" ] && grep -q '<div id="app"' /tmp/production.html; then
-              echo "Canonical production URL is serving the application."
+            marker="$(curl --silent --show-error "$deployment/release.json" || true)"
+            status="$(curl --silent --show-error --output /tmp/deployment.html --write-out '%{http_code}' "$deployment/" || true)"
+            if [ "$status" = "200" ] && [ "$marker" = "$expected" ] && grep -q '<div id="app"' /tmp/deployment.html; then
+              echo "Immutable deployment URL serves certified revision ${{ steps.revision.outputs.sha }}."
+              break
+            fi
+            if [ "$attempt" = "12" ]; then
+              echo "Deployment URL did not prove the certified revision." >&2
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Verify canonical production URL and exact SHA
+        shell: bash
+        run: |
+          expected='{"sha":"${{ steps.revision.outputs.sha }}"}'
+          canonical="https://earth-reference-rebuild.vercel.app"
+          for attempt in {1..18}; do
+            marker="$(curl --silent --show-error "$canonical/release.json" || true)"
+            status="$(curl --silent --show-error --output /tmp/production.html --write-out '%{http_code}' "$canonical/" || true)"
+            convergence="$(curl --silent --show-error --output /tmp/convergence.js --write-out '%{http_code}' "$canonical/earth-convergence.js" || true)"
+            if [ "$status" = "200" ] && [ "$convergence" = "200" ] && [ "$marker" = "$expected" ] && grep -q '<div id="app"' /tmp/production.html && grep -q 'EarthConvergence' /tmp/convergence.js; then
+              {
+                echo "## Production certification"
+                echo
+                echo "Canonical URL: $canonical"
+                echo "Certified revision: `${{ steps.revision.outputs.sha }}`"
+                echo "Exact release marker verified."
+              } >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             sleep 5
           done
-          echo "Canonical production verification failed." >&2
+          echo "Canonical production URL did not converge to the certified SHA." >&2
           exit 1

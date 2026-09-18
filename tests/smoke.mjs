@@ -50,10 +50,11 @@ for (const file of ['visual-fixes.js','moon-fidelity.js','reference-polish.js','
 }
 assert.ok(bridge.includes('/earth-convergence.js'), 'experience bridge must load convergence engine');
 assert.ok(bridge.includes('/earth-convergence.css'), 'experience bridge must load convergence styles');
-for (const capability of ['registerLayer','renderAt','selectMoonLandmark','setOrbit','setRegion','setSimulationTime','predictOrbit','ingestEvent','applyStoryCamera','cameraForGeo','focusGeo','drawHeatmap','drawClusters','drawUrbanInset','renderPlaceDetail','STORY_SCENES','orbitPeriodSeconds','gravityAt','convergenceSourcesTrigger']) {
+for (const capability of ['registerLayer','renderAt','selectMoonLandmark','setOrbit','setRegion','setSimulationTime','predictOrbit','ingestEvent','selectEvent','applyStoryCamera','cameraForGeo','focusGeo','drawHeatmap','drawClusters','drawUrbanInset','renderPlaceDetail','STORY_SCENES','orbitPeriodSeconds','gravityAt','convergenceSourcesTrigger']) {
   assert.ok(convergence.includes(capability), 'missing convergence capability ' + capability);
 }
 assert.ok(convergenceCss.includes('.convergence-drawer'), 'convergence explorer styling missing');
+assert.ok(!convergence.includes("box.innerHTML='<strong>'+p.name"), 'event detail rendering must avoid HTML injection');
 assert.ok(deployWorkflow.includes('release.json'), 'production workflow must stamp the certified revision');
 assert.ok(deployWorkflow.includes('Verify canonical production URL and exact SHA'), 'production workflow must verify the canonical exact SHA');
 assert.ok(deployWorkflow.includes('VERCEL_TOKEN is required for production deployment'), 'production deployment must remain fail-closed without authorization');

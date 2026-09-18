@@ -49,7 +49,7 @@ for (const file of ['visual-fixes.js','moon-fidelity.js','reference-polish.js','
 }
 assert.ok(bridge.includes('/earth-convergence.js'), 'experience bridge must load convergence engine');
 assert.ok(bridge.includes('/earth-convergence.css'), 'experience bridge must load convergence styles');
-for (const capability of ['registerLayer','renderAt','selectMoonLandmark','setOrbit','setRegion','setSimulationTime','drawHeatmap','drawClusters','renderPlaceDetail','STORY_SCENES','orbitPeriodSeconds']) {
+for (const capability of ['registerLayer','renderAt','selectMoonLandmark','setOrbit','setRegion','setSimulationTime','predictOrbit','drawHeatmap','drawClusters','drawUrbanInset','renderPlaceDetail','STORY_SCENES','orbitPeriodSeconds','gravityAt']) {
   assert.ok(convergence.includes(capability), 'missing convergence capability ' + capability);
 }
 assert.ok(convergenceCss.includes('.convergence-drawer'), 'convergence explorer styling missing');

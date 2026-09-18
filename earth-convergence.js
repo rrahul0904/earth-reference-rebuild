@@ -93,6 +93,16 @@
     for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}
     return h>>>0;
   }
+  function boundedText(value,fallback,max){
+    var text=String(value===undefined||value===null?fallback:value).trim();
+    if(!text)text=String(fallback||'');
+    return text.slice(0,Math.max(1,max||160));
+  }
+  function finiteNumber(value,fallback,min,max){
+    var n=Number(value);if(!Number.isFinite(n))n=fallback;
+    if(Number.isFinite(min))n=Math.max(min,n);if(Number.isFinite(max))n=Math.min(max,n);
+    return n;
+  }
   function cityNeighborhoods(id){
     return {
       cairo:['Historic Cairo','Zamalek','Heliopolis'],
@@ -317,13 +327,13 @@
     var lat=Number(input.lat),lon=Number(input.lon);
     if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180)throw new Error('Event requires valid lat/lon');
     var event={
-      id:String(input.id||('event-'+(runtime.events.length+1))),
-      name:String(input.name||input.label||'Event'),
-      region:String(input.region||''),
+      id:boundedText(input.id,'event-'+(runtime.events.length+1),96),
+      name:boundedText(input.name||input.label,'Event',180),
+      region:boundedText(input.region,'',96),
       lat:lat,lon:lon,
-      time:Number.isFinite(Number(input.time))?Math.max(0,Math.min(1,Number(input.time))):runtime.dataTime,
-      weight:Math.max(.25,Math.min(4,Number(input.weight)||1)),
-      phase:seeded(stringSeed(String(input.id||input.label||runtime.events.length)))()*Math.PI*2,
+      time:finiteNumber(input.time,runtime.dataTime,0,1),
+      weight:finiteNumber(input.weight,1,.25,4),
+      phase:seeded(stringSeed(boundedText(input.id||input.label,runtime.events.length,96)))*Math.PI*2,
       type:'event'
     };
     runtime.events.push(event);if(runtime.events.length>500)runtime.events.splice(0,runtime.events.length-500);
@@ -389,7 +399,7 @@
   }
 
   function orbitPeriodSeconds(altitudeKm){
-    var a=EARTH_RADIUS_KM+altitudeKm;
+    var altitude=finiteNumber(altitudeKm,420,160,1000000),a=EARTH_RADIUS_KM+altitude;
     return 2*Math.PI*Math.sqrt((a*a*a)/MU_KM3_S2);
   }
 
@@ -400,7 +410,7 @@
 
   function predictOrbit(altitudeKm,samples){
     samples=Math.max(24,Math.min(720,Math.round(samples||180)));
-    var radius=EARTH_RADIUS_KM+Math.max(160,Number(altitudeKm)||420);
+    var radius=EARTH_RADIUS_KM+finiteNumber(altitudeKm,420,160,1000000);
     var period=orbitPeriodSeconds(radius-EARTH_RADIUS_KM),dt=period/samples;
     var x=radius,y=0,vx=0,vy=Math.sqrt(MU_KM3_S2/radius),points=[{x:x,y:y,t:0}];
     var a=gravityAt(x,y);
@@ -857,17 +867,17 @@
       snapshot:snapshot,
       selectCity:function(id){var p=CITIES.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'city'},p),true);return !!p;},
       selectMoonLandmark:function(id){var p=MOON_LANDMARKS.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'moon'},p),true);return !!p;},
-      setOrbit:function(altitudeKm,inclinationDeg){runtime.sim.enabled=true;runtime.sim.altitudeKm=Math.max(160,Number(altitudeKm)||420);runtime.sim.inclinationDeg=Math.max(0,Math.min(180,Number(inclinationDeg)||0));runtime.sim.elapsed=0;refreshSimulationUI();return snapshot().orbit;},
-      setSimulationTime:function(seconds){runtime.sim.enabled=true;runtime.sim.elapsed=Math.max(0,Number(seconds)||0);return snapshot().orbit;},
+      setOrbit:function(altitudeKm,inclinationDeg){runtime.sim.enabled=true;runtime.sim.altitudeKm=finiteNumber(altitudeKm,420,160,1000000);runtime.sim.inclinationDeg=finiteNumber(inclinationDeg,0,0,180);runtime.sim.elapsed=0;refreshSimulationUI();return snapshot().orbit;},
+      setSimulationTime:function(seconds){runtime.sim.enabled=true;runtime.sim.elapsed=finiteNumber(seconds,0,0,315576000);return snapshot().orbit;},
       predictOrbit:function(altitudeKm,samples){return predictOrbit(altitudeKm,samples);},
       ingestEvent:ingestEvent,
       selectEvent:function(id){var p=runtime.events.find(function(x){return x.id===String(id);});if(p)selectPlace(p,true);return !!p;},
       clearEvents:function(){runtime.events.length=0;if(runtime.selectedPlace&&runtime.selectedPlace.type==='event')runtime.selectedPlace=null;updateMetrics();renderPlaceDetail();},
-      focusGeo:function(lat,lon,zoom){return focusGeo(Number(lat)||0,Number(lon)||0,zoom);},
+      focusGeo:function(lat,lon,zoom){return focusGeo(finiteNumber(lat,0,-90,90),finiteNumber(lon,0,-180,180),finiteNumber(zoom,1.34,.5,3));},
       setRegion:function(region){var allowed=['global','americas','europe','africa-middle-east','asia-pacific'];runtime.region=allowed.indexOf(region)>=0?region:'global';var select=drawer&&drawer.querySelector('#convergenceRegion');if(select)select.value=runtime.region;updateMetrics();return runtime.region;},
       listLayers:function(){return Array.from(layerRegistry.values()).map(function(x){return {id:x.id,label:x.label,description:x.description};});},
-      listCities:function(){return CITIES.slice();},
-      listMoonLandmarks:function(){return MOON_LANDMARKS.slice();},
+      listCities:function(){return CITIES.map(function(x){return Object.assign({},x);});},
+      listMoonLandmarks:function(){return MOON_LANDMARKS.map(function(x){return Object.assign({},x);});},
       storyDuration:STORY_DURATION,
       open:function(){openConvergenceDrawer();},
       close:function(){closeConvergenceDrawer();}

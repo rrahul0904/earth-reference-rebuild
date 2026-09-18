@@ -22,6 +22,7 @@
     dataPlaying:false,
     region:'global',
     hoverPlace:null,
+    events:[],
     last:performance.now(),
     sim:{ enabled:false, altitudeKm:420, inclinationDeg:51.6, elapsed:0, playing:true, speed:1, track:false },
     story:{ playing:false, time:0, speed:1, scene:-1, lastScene:-1 },
@@ -71,13 +72,13 @@
   };
 
   var STORY_SCENES = [
-    {at:0,duration:7,exp:'planet',label:'Earth through time',age:750,copy:'Begin with a reconstructed Earth and move forward through the planetary record.'},
-    {at:7,duration:7,exp:'civilization',label:'Human Earth',age:.125,copy:'Follow human dispersal, then reveal cities as persistent geographic anchors.'},
-    {at:14,duration:7,exp:'orbit',control:'orbit-constellations',label:'Near Earth',copy:'Move from the surface into orbital infrastructure and predicted trajectories.'},
-    {at:21,duration:7,exp:'moon',control:'moon-apollo11',label:'Moon',place:'apollo11',copy:'Cross to the lunar surface and anchor exploration in real mission landmarks.'},
-    {at:28,duration:7,exp:'earthquakes',control:'quake-japan',label:'Living Earth',copy:'Read tectonic events as spatial signals across a moving planet.'},
-    {at:35,duration:7,exp:'oceans',control:'ocean-gulf',label:'Connected ocean',copy:'Trace circulation as animated pathways carrying heat between basins.'},
-    {at:42,duration:7,exp:'solar',control:'solar-earth',label:'Perspective',copy:'End by placing Earth inside the larger orbital system.'}
+    {at:0,duration:7,exp:'planet',label:'Earth through time',age:750,camera:{yaw:-1.15,pitch:.16,zoom:.92},copy:'Begin with a reconstructed Earth and move forward through the planetary record.'},
+    {at:7,duration:7,exp:'civilization',label:'Human Earth',age:.125,camera:{yaw:-.62,pitch:.08,zoom:1.08},copy:'Follow human dispersal, then reveal cities as persistent geographic anchors.'},
+    {at:14,duration:7,exp:'orbit',control:'orbit-constellations',label:'Near Earth',camera:{yaw:-.18,pitch:.02,zoom:.96},copy:'Move from the surface into orbital infrastructure and predicted trajectories.'},
+    {at:21,duration:7,exp:'moon',control:'moon-apollo11',label:'Moon',place:'apollo11',camera:{yaw:.12,pitch:.04,zoom:1.03},copy:'Cross to the lunar surface and anchor exploration in real mission landmarks.'},
+    {at:28,duration:7,exp:'earthquakes',control:'quake-japan',label:'Living Earth',camera:{yaw:-.52,pitch:.10,zoom:1.08},copy:'Read tectonic events as spatial signals across a moving planet.'},
+    {at:35,duration:7,exp:'oceans',control:'ocean-gulf',label:'Connected ocean',camera:{yaw:.66,pitch:-.08,zoom:1.08},copy:'Trace circulation as animated pathways carrying heat between basins.'},
+    {at:42,duration:7,exp:'solar',control:'solar-earth',label:'Perspective',camera:{yaw:0,pitch:0,zoom:.90},copy:'End by placing Earth inside the larger orbital system.'}
   ];
   var STORY_DURATION = STORY_SCENES.reduce(function(m,s){return Math.max(m,s.at+s.duration);},0);
 
@@ -282,6 +283,34 @@
     ctx.textAlign='start';ctx.textBaseline='alphabetic';
   }
 
+  function drawEvents(){
+    runtime.events.filter(visibleFeature).forEach(function(event){
+      var p=projection(event.lat,event.lon);if(!p)return;
+      var age=Math.max(0,Math.min(1,1-Math.abs(runtime.dataTime-event.time)*3));
+      var r=2.4+(event.weight||1)*1.6;
+      ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle='rgba(245,225,156,'+(0.35+age*.4)+')';ctx.fill();
+      ctx.beginPath();ctx.arc(p.x,p.y,r+5+Math.sin(runtime.sim.elapsed*2+event.phase)*2,0,Math.PI*2);ctx.strokeStyle='rgba(245,225,156,'+(0.08+age*.16)+')';ctx.stroke();
+    });
+  }
+
+  function ingestEvent(input){
+    input=input||{};
+    var lat=Number(input.lat),lon=Number(input.lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180)throw new Error('Event requires valid lat/lon');
+    var event={
+      id:String(input.id||('event-'+(runtime.events.length+1))),
+      name:String(input.name||input.label||'Event'),
+      region:String(input.region||''),
+      lat:lat,lon:lon,
+      time:Number.isFinite(Number(input.time))?Math.max(0,Math.min(1,Number(input.time))):runtime.dataTime,
+      weight:Math.max(.25,Math.min(4,Number(input.weight)||1)),
+      phase:seeded(stringSeed(String(input.id||input.label||runtime.events.length)))()*Math.PI*2,
+      type:'event'
+    };
+    runtime.events.push(event);if(runtime.events.length>500)runtime.events.splice(0,runtime.events.length-500);
+    updateMetrics();return Object.assign({},event);
+  }
+
   function drawOcean(){
     Object.keys(OCEAN_PATHS).forEach(function(name,pi){
       var path=OCEAN_PATHS[name];ctx.beginPath();var started=false;
@@ -411,6 +440,16 @@
     return 0;
   }
 
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function lerpAngle(a,b,t){var d=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI;return a+d*t;}
+  function applyStoryCamera(t){
+    var idx=sceneIndexAt(t),scene=STORY_SCENES[idx],next=STORY_SCENES[Math.min(idx+1,STORY_SCENES.length-1)];
+    if(!scene.camera||typeof state==='undefined')return;
+    var u=Math.max(0,Math.min(1,(t-scene.at)/Math.max(.001,scene.duration))),e=u*u*(3-2*u);
+    var a=scene.camera,b=next.camera||a;
+    state.yaw=lerpAngle(a.yaw,b.yaw,e);state.pitch=lerp(a.pitch,b.pitch,e);state.targetZoom=lerp(a.zoom,b.zoom,e);
+  }
+
   function clickExperience(name){
     var b=document.querySelector('[data-experience-nav="'+name+'"]');
     if(b && state.experience!==name)b.click();
@@ -441,7 +480,7 @@
   function renderAt(seconds){
     runtime.story.time=Math.max(0,Math.min(STORY_DURATION,Number(seconds)||0));
     var idx=sceneIndexAt(runtime.story.time);
-    if(idx!==runtime.story.lastScene){runtime.story.lastScene=idx;applyStoryScene(idx);}
+    runtime.story.lastScene=idx;applyStoryScene(idx);applyStoryCamera(runtime.story.time);
     refreshStoryUI();
     return snapshot();
   }
@@ -453,7 +492,9 @@
       activeLayers:Array.from(activeLayers).sort(),
       dataTime:Number(runtime.dataTime.toFixed(4)),
       region:runtime.region,
+      eventCount:runtime.events.length,
       selectedPlace:runtime.selectedPlace?runtime.selectedPlace.id:null,
+      camera:{yaw:Number(state.yaw.toFixed(5)),pitch:Number(state.pitch.toFixed(5)),targetZoom:Number(state.targetZoom.toFixed(5))},
       orbit:{enabled:runtime.sim.enabled,altitudeKm:runtime.sim.altitudeKm,inclinationDeg:runtime.sim.inclinationDeg,periodSeconds:Number(orbitPeriodSeconds(runtime.sim.altitudeKm).toFixed(3))},
       story:{time:Number(runtime.story.time.toFixed(3)),scene:runtime.story.scene,playing:runtime.story.playing}
     };
@@ -483,6 +524,9 @@
       MOON_LANDMARKS.forEach(function(p){var q=moonPosition(p);if(q.visible)candidates.push({place:Object.assign({type:'moon'},p),p:q});});
     }else if(activeLayers.has('cities') || state.experience==='civilization'){
       CITIES.forEach(function(p){var q=projection(p.lat,p.lon);if(q)candidates.push({place:Object.assign({type:'city'},p),p:q});});
+      if(activeLayers.has('events'))runtime.events.filter(visibleFeature).forEach(function(p){var q=projection(p.lat,p.lon);if(q)candidates.push({place:p,p:q});});
+    }else if(activeLayers.has('events')){
+      runtime.events.filter(visibleFeature).forEach(function(p){var q=projection(p.lat,p.lon);if(q)candidates.push({place:p,p:q});});
     }
     var best=null,dist=Infinity;
     candidates.forEach(function(c){var d=Math.hypot(c.p.x-x,c.p.y-y);if(d<dist){dist=d;best=c.place;}});
@@ -533,6 +577,7 @@
     if(id==='cities')return CITIES.filter(visibleFeature).length;
     if(id==='seismic')return SEISMIC.filter(visibleFeature).length;
     if(id==='heatmap'||id==='clusters')return CITIES.concat(SEISMIC).filter(visibleFeature).length;
+    if(id==='events')return runtime.events.filter(visibleFeature).length;
     if(id==='migration')return typeof MIGRATION_ROUTES==='undefined'?0:Math.round(MIGRATION_ROUTES.length*runtime.dataTime);
     if(id==='ocean')return Object.keys(OCEAN_PATHS).length;
     if(id==='groundtrack')return 1;
@@ -745,7 +790,7 @@
       if(runtime.story.time>=STORY_DURATION){runtime.story.time=STORY_DURATION;runtime.story.playing=false;document.getElementById('app').dataset.convergenceStory='false';}
       var idx=sceneIndexAt(runtime.story.time);
       if(idx!==runtime.story.lastScene){runtime.story.lastScene=idx;applyStoryScene(idx);}
-      refreshStoryUI();
+      applyStoryCamera(runtime.story.time);refreshStoryUI();
     }
 
     var dpr=Math.min(devicePixelRatio||1,2);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,innerWidth,innerHeight);
@@ -759,6 +804,7 @@
   registerLayer('seismic',{label:'Seismic',description:'Curated major earthquake signals',draw:drawSeismic});
   registerLayer('heatmap',{label:'Heatmap',description:'Density field derived from visible geographic features',draw:drawHeatmap});
   registerLayer('clusters',{label:'Clusters',description:'Screen-space aggregation of visible geographic features',draw:drawClusters});
+  registerLayer('events',{label:'Events',description:'Bounded push-event stream for live or simulated geographic signals',draw:drawEvents});
   registerLayer('ocean',{label:'Currents',description:'Modeled large-scale circulation paths',draw:drawOcean});
   registerLayer('groundtrack',{label:'Ground track',description:'Representative deterministic orbital ground track',draw:drawGroundTrack});
 
@@ -778,6 +824,8 @@
       setOrbit:function(altitudeKm,inclinationDeg){runtime.sim.enabled=true;runtime.sim.altitudeKm=Math.max(160,Number(altitudeKm)||420);runtime.sim.inclinationDeg=Math.max(0,Math.min(180,Number(inclinationDeg)||0));runtime.sim.elapsed=0;refreshSimulationUI();return snapshot().orbit;},
       setSimulationTime:function(seconds){runtime.sim.enabled=true;runtime.sim.elapsed=Math.max(0,Number(seconds)||0);return snapshot().orbit;},
       predictOrbit:function(altitudeKm,samples){return predictOrbit(altitudeKm,samples);},
+      ingestEvent:ingestEvent,
+      clearEvents:function(){runtime.events.length=0;updateMetrics();},
       setRegion:function(region){var allowed=['global','americas','europe','africa-middle-east','asia-pacific'];runtime.region=allowed.indexOf(region)>=0?region:'global';var select=drawer&&drawer.querySelector('#convergenceRegion');if(select)select.value=runtime.region;updateMetrics();return runtime.region;},
       listLayers:function(){return Array.from(layerRegistry.values()).map(function(x){return {id:x.id,label:x.label,description:x.description};});},
       listCities:function(){return CITIES.slice();},

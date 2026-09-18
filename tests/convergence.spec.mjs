@@ -109,6 +109,17 @@ test('Orbital Speeders-derived simulation computes a physical orbital period and
   expect(prediction.periodSeconds).toBeLessThan(5700);
   expect(Math.abs(prediction.points[0].x - prediction.points.at(-1).x)).toBeLessThan(100);
 
+  const bounded = await page.evaluate(() => {
+    const orbit = window.EarthConvergence.setOrbit(Infinity, Infinity);
+    const camera = window.EarthConvergence.focusGeo(Infinity, -Infinity, 99);
+    window.EarthConvergence.setSimulationTime(Infinity);
+    return { orbit, camera };
+  });
+  expect(bounded.orbit.altitudeKm).toBe(420);
+  expect(bounded.orbit.inclinationDeg).toBe(0);
+  expect(Number.isFinite(bounded.camera.yaw)).toBe(true);
+  expect(Number.isFinite(bounded.camera.pitch)).toBe(true);
+
   await openConvergenceDirect(page);
   await page.locator('[data-convergence-tab="simulation"]').click();
   await page.locator('[data-orbit-preset="geo"]').click();
@@ -152,6 +163,12 @@ test('semantic renderAt timeline deterministically orchestrates existing experie
 
 test('city selection reuses globe interaction without importing game or marketplace mechanics', async ({ page }) => {
   await ready(page);
+  const catalogIsolation = await page.evaluate(() => {
+    const first = window.EarthConvergence.listCities();
+    first[0].name = 'mutated';
+    return window.EarthConvergence.listCities()[0].name;
+  });
+  expect(catalogIsolation).toBe('Cairo');
   const selected = await page.evaluate(() => window.EarthConvergence.selectCity('cairo'));
   expect(selected).toBeTruthy();
   await expect(page.locator('#app')).toHaveAttribute('data-convergence-selected', 'cairo');

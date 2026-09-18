@@ -7,15 +7,22 @@ const ready = async page => {
 };
 
 const openConvergence = async page => {
-  if (!(await page.locator('#convergenceDrawer').isVisible())) {
+  if (await page.locator('#convergenceDrawer').isVisible()) return;
+  if (await page.locator('#exploreButton').isVisible()) {
     if (!(await page.locator('#exploreMenu').isVisible())) {
-      await page.locator('#exploreButton').click();
-      await expect(page.locator('#exploreMenu')).toBeVisible();
+      await page.locator('#exploreButton').click({ timeout: 15000 });
+      await expect(page.locator('#exploreMenu')).toBeVisible({ timeout: 15000 });
     }
-    await expect(page.locator('#convergenceTrigger')).toBeVisible();
-    await page.locator('#convergenceTrigger').click();
-    await expect(page.locator('#convergenceDrawer')).toBeVisible();
+    await expect(page.locator('#convergenceTrigger')).toBeVisible({ timeout: 15000 });
+    await page.locator('#convergenceTrigger').click({ timeout: 15000 });
+  } else {
+    await expect(page.locator('#sourcesButton')).toBeVisible({ timeout: 15000 });
+    await page.locator('#sourcesButton').click({ timeout: 15000 });
+    await expect(page.locator('#sourcesDialog')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('#convergenceSourcesTrigger')).toBeVisible({ timeout: 15000 });
+    await page.locator('#convergenceSourcesTrigger').click({ timeout: 15000 });
   }
+  await expect(page.locator('#convergenceDrawer')).toBeVisible({ timeout: 15000 });
 };
 
 test('consolidated Earth systems explorer loads without changing the default experience', async ({ page }) => {
@@ -23,7 +30,7 @@ test('consolidated Earth systems explorer loads without changing the default exp
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
   await expect(page.locator('#convergenceTrigger')).toBeHidden();
   await openConvergence(page);
-  await expect(page.locator('[data-layer]')).toHaveCount(7);
+  await expect(page.locator('[data-layer]')).toHaveCount(8);
   await expect(page.locator('#convergenceMetricLayers')).toHaveText('0');
   const baseSnapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
   expect(baseSnapshot.orbit.enabled).toBe(false);
@@ -44,10 +51,22 @@ test('geospatial layer registry toggles deterministic data layers', async ({ pag
 
   await page.locator('[data-layer="heatmap"]').click();
   await page.locator('[data-layer="clusters"]').click();
+  const event = await page.evaluate(() => window.EarthConvergence.ingestEvent({
+    id: 'qa-event',
+    name: 'QA geographic signal',
+    region: 'North America',
+    lat: 42.36,
+    lon: -71.06,
+    time: 0.5,
+    weight: 2
+  }));
+  expect(event.id).toBe('qa-event');
+  await page.locator('[data-layer="events"]').click();
   await page.locator('#convergenceRegion').selectOption('americas');
   const filtered = await page.evaluate(() => window.EarthConvergence.snapshot());
   expect(filtered.region).toBe('americas');
-  expect(filtered.activeLayers).toEqual(['cities', 'clusters', 'heatmap', 'migration']);
+  expect(filtered.eventCount).toBe(1);
+  expect(filtered.activeLayers).toEqual(['cities', 'clusters', 'events', 'heatmap', 'migration']);
 });
 
 test('Moonstake-derived landmark exploration integrates with the existing Moon experience', async ({ page }) => {
@@ -113,6 +132,7 @@ test('semantic renderAt timeline deterministically orchestrates existing experie
   expect(second.story.time).toBe(first.story.time);
   expect(second.story.scene).toBe(first.story.scene);
   expect(second.selectedPlace).toBe(first.selectedPlace);
+  expect(second.camera).toEqual(first.camera);
 
   await page.evaluate(() => window.EarthConvergence.renderAt(35));
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'oceans');

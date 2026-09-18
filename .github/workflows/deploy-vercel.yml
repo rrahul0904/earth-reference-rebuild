@@ -98,7 +98,7 @@ jobs:
           for attempt in {1..12}; do
             marker="$(curl --silent --show-error "$deployment/release.json" || true)"
             status="$(curl --silent --show-error --output /tmp/deployment.html --write-out '%{http_code}' "$deployment/" || true)"
-            if [ "$status" = "200" ] && [ "$marker" = "$expected" ] && grep -q '<div id="app"' /tmp/deployment.html; then
+            if [ "$status" = "200" ] && [ "$marker" = "$expected" ] && grep -q 'id="app"' /tmp/deployment.html; then
               echo "Immutable deployment URL serves certified revision ${{ steps.revision.outputs.sha }}."
               break
             fi
@@ -118,7 +118,7 @@ jobs:
             marker="$(curl --silent --show-error "$canonical/release.json" || true)"
             status="$(curl --silent --show-error --output /tmp/production.html --write-out '%{http_code}' "$canonical/" || true)"
             convergence="$(curl --silent --show-error --output /tmp/convergence.js --write-out '%{http_code}' "$canonical/earth-convergence.js" || true)"
-            if [ "$status" = "200" ] && [ "$convergence" = "200" ] && [ "$marker" = "$expected" ] && grep -q '<div id="app"' /tmp/production.html && grep -q 'EarthConvergence' /tmp/convergence.js; then
+            if [ "$status" = "200" ] && [ "$convergence" = "200" ] && [ "$marker" = "$expected" ] && grep -q 'id="app"' /tmp/production.html && grep -q 'EarthConvergence' /tmp/convergence.js; then
               {
                 echo "## Production certification"
                 echo

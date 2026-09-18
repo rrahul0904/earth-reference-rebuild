@@ -84,3 +84,8 @@
   text-align:left;cursor:pointer
 }
 .convergence-source-entry:hover{border-color:rgba(168,234,239,.34);background:rgba(108,211,220,.11)}
+
+/* Keep persistent navigation clickable above heavyweight WebGL/canvas scenes. */
+.app .topbar{z-index:45;pointer-events:auto}
+.app .topbar .top-actions,.app .topbar button{pointer-events:auto}
+.convergence-drawer{z-index:50}

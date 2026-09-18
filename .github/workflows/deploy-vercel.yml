@@ -77,17 +77,17 @@ jobs:
       - name: Pull production configuration
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Deploy certified revision to production
+      - name: Stage certified production artifact without moving domains
         id: deploy
         shell: bash
         run: |
-          url="$(vercel deploy --prod --yes --token="$VERCEL_TOKEN")"
+          url="$(vercel deploy --prod --skip-domain --yes --token="$VERCEL_TOKEN")"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           {
-            echo "## Production deployment"
+            echo "## Staged production artifact"
             echo
             echo "Certified revision: \`${{ steps.revision.outputs.sha }}\`"
-            echo "Deployment: $url"
+            echo "Immutable deployment: $url"\n            echo "Production domains have not moved yet."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify deployed revision
@@ -108,6 +108,15 @@ jobs:
             fi
             sleep 5
           done
+
+      - name: Promote verified artifact to production
+        shell: bash
+        run: |
+          vercel promote "${{ steps.deploy.outputs.url }}" --yes --token="$VERCEL_TOKEN"
+          {
+            echo
+            echo "Verified immutable artifact promoted to production."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify canonical production URL and exact SHA
         shell: bash

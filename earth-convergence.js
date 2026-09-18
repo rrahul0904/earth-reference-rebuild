@@ -626,9 +626,9 @@
   }
 
   function installUI(){
-    var actions=document.querySelector('.top-actions');
-    trigger=document.createElement('button');trigger.type='button';trigger.className='sources-link convergence-trigger';trigger.id='convergenceTrigger';trigger.textContent='Layers';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','convergenceDrawer');
-    actions.insertBefore(trigger,actions.firstChild);
+    var exploreGrid=document.querySelector('#exploreMenu .drawer-grid');
+    trigger=document.createElement('button');trigger.type='button';trigger.className='convergence-trigger';trigger.id='convergenceTrigger';trigger.innerHTML='<span>07</span><strong>Systems</strong><small>Layers & simulations</small>';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','convergenceDrawer');
+    exploreGrid.appendChild(trigger);
 
     drawer=document.createElement('aside');drawer.className='convergence-drawer';drawer.id='convergenceDrawer';drawer.hidden=true;
     drawer.innerHTML=
@@ -684,7 +684,12 @@
 
     toast=document.createElement('div');toast.className='convergence-toast';toast.setAttribute('role','status');toast.setAttribute('aria-live','polite');document.body.appendChild(toast);
 
-    trigger.addEventListener('click',function(){drawer.hidden=!drawer.hidden;runtime.drawerOpen=!drawer.hidden;trigger.setAttribute('aria-expanded',runtime.drawerOpen?'true':'false');if(runtime.drawerOpen){renderPlaces();refreshSimulationUI();refreshStoryUI();}});
+    trigger.addEventListener('click',function(){
+      var explore=document.getElementById('exploreMenu'),exploreButton=document.getElementById('exploreButton');
+      if(explore)explore.hidden=true;if(exploreButton)exploreButton.setAttribute('aria-expanded','false');
+      drawer.hidden=!drawer.hidden;runtime.drawerOpen=!drawer.hidden;trigger.setAttribute('aria-expanded',runtime.drawerOpen?'true':'false');
+      if(runtime.drawerOpen){renderPlaces();refreshSimulationUI();refreshStoryUI();}
+    });
     drawer.querySelector('.convergence-close').addEventListener('click',function(){drawer.hidden=true;runtime.drawerOpen=false;trigger.setAttribute('aria-expanded','false');});
     drawer.querySelectorAll('[data-convergence-tab]').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.convergenceTab);});});
     drawer.querySelector('#convergenceDataTime').addEventListener('input',function(e){runtime.dataTime=Number(e.target.value)/1000;updateMetrics();});

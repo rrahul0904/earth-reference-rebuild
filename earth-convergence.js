@@ -133,6 +133,7 @@
   function focusGeo(lat,lon,zoom){
     var camera=cameraForGeo(lat,lon);
     state.yaw=camera.yaw;state.pitch=camera.pitch;state.velocityYaw=0;state.velocityPitch=0;
+    state.lastInteraction=performance.now();
     state.targetZoom=Math.max(state.targetZoom||1,Number(zoom)||1.34);
     return camera;
   }

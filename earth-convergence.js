@@ -20,8 +20,10 @@
     search:'',
     dataTime:1,
     dataPlaying:false,
+    region:'global',
+    hoverPlace:null,
     last:performance.now(),
-    sim:{ altitudeKm:420, inclinationDeg:51.6, elapsed:0, playing:true, speed:1 },
+    sim:{ altitudeKm:420, inclinationDeg:51.6, elapsed:0, playing:true, speed:1, track:false },
     story:{ playing:false, time:0, speed:1, scene:-1, lastScene:-1 },
     pointer:null
   };
@@ -105,6 +107,15 @@
   }
 
   function visibleByTime(item){return item.time===undefined || item.time<=runtime.dataTime+.0001;}
+  function regionBucket(item){
+    var lon=Number(item.lon)||0,lat=Number(item.lat)||0;
+    if(lon>=60 || lon<=-150)return 'asia-pacific';
+    if(lon<-25)return 'americas';
+    if(lat>=25 && lon>=-25 && lon<60)return 'europe';
+    return 'africa-middle-east';
+  }
+  function visibleByRegion(item){return runtime.region==='global' || regionBucket(item)===runtime.region;}
+  function visibleFeature(item){return visibleByTime(item)&&visibleByRegion(item);}
 
   function registerLayer(id,spec){
     layerRegistry.set(id,Object.assign({id:id,label:id,description:'',kind:'points'},spec||{}));
@@ -154,7 +165,7 @@
 
   function drawCities(){
     CITIES.forEach(function(city){
-      if(!visibleByTime(city))return;
+      if(!visibleFeature(city))return;
       var p=projection(city.lat,city.lon);if(!p)return;
       drawDot(p,2.4,.72);
     });
@@ -184,7 +195,7 @@
 
   function drawSeismic(){
     SEISMIC.forEach(function(q){
-      if(!visibleByTime(q))return;
+      if(!visibleFeature(q))return;
       var p=projection(q.lat,q.lon);if(!p)return;
       var r=2+(q.m-7)*2.1;
       ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);
@@ -192,6 +203,39 @@
       ctx.beginPath();ctx.arc(p.x,p.y,r+5,0,Math.PI*2);
       ctx.strokeStyle='rgba(244,205,132,.2)';ctx.stroke();
     });
+  }
+
+  function heatPoints(){
+    return CITIES.concat(SEISMIC).filter(visibleFeature).map(function(item){return {item:item,p:projection(item.lat,item.lon)};}).filter(function(x){return !!x.p;});
+  }
+
+  function drawHeatmap(){
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    heatPoints().forEach(function(entry){
+      var p=entry.p,r=entry.item.m?28+entry.item.m*2:26;
+      var g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r);
+      g.addColorStop(0,'rgba(111,224,231,.20)');
+      g.addColorStop(.45,'rgba(102,198,224,.10)');
+      g.addColorStop(1,'rgba(64,131,168,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function drawClusters(){
+    var bins=new Map();
+    CITIES.concat(SEISMIC).filter(visibleFeature).forEach(function(item){
+      var p=projection(item.lat,item.lon);if(!p)return;
+      var key=Math.floor(p.x/90)+':'+Math.floor(p.y/90);
+      var b=bins.get(key)||{x:0,y:0,n:0};b.x+=p.x;b.y+=p.y;b.n++;bins.set(key,b);
+    });
+    bins.forEach(function(b){
+      var x=b.x/b.n,y=b.y/b.n,r=7+Math.min(12,b.n*1.8);
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle='rgba(7,24,30,.82)';ctx.fill();
+      ctx.strokeStyle='rgba(164,237,241,.45)';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle='rgba(234,252,253,.9)';ctx.font='10px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(b.n),x,y);
+    });
+    ctx.textAlign='start';ctx.textBaseline='alphabetic';
   }
 
   function drawOcean(){
@@ -237,7 +281,7 @@
   }
 
   function drawSelected(){
-    var place=runtime.selectedPlace;if(!place)return;
+    var place=runtime.selectedPlace||runtime.hoverPlace;if(!place)return;
     var p=null;
     if(place.type==='moon'){
       p=moonPosition(place);
@@ -247,7 +291,7 @@
     }
     if(!p)return;
     var pulse=5+Math.sin(runtime.sim.elapsed*2.6)*1.8;
-    ctx.beginPath();ctx.arc(p.x,p.y,pulse,0,Math.PI*2);ctx.strokeStyle='rgba(230,255,255,.9)';ctx.lineWidth=1.4;ctx.stroke();
+    ctx.beginPath();ctx.arc(p.x,p.y,pulse,0,Math.PI*2);ctx.strokeStyle=runtime.selectedPlace&&runtime.selectedPlace.id===place.id?'rgba(230,255,255,.9)':'rgba(200,240,243,.46)';ctx.lineWidth=1.4;ctx.stroke();
     ctx.beginPath();ctx.arc(p.x,p.y,2.2,0,Math.PI*2);ctx.fillStyle='rgba(238,255,255,.95)';ctx.fill();
     drawLabel(p,place.name,place.region||'');
   }
@@ -338,6 +382,7 @@
       experience:state.experience,
       activeLayers:Array.from(activeLayers).sort(),
       dataTime:Number(runtime.dataTime.toFixed(4)),
+      region:runtime.region,
       selectedPlace:runtime.selectedPlace?runtime.selectedPlace.id:null,
       orbit:{altitudeKm:runtime.sim.altitudeKm,inclinationDeg:runtime.sim.inclinationDeg,periodSeconds:Number(orbitPeriodSeconds(runtime.sim.altitudeKm).toFixed(3))},
       story:{time:Number(runtime.story.time.toFixed(3)),scene:runtime.story.scene,playing:runtime.story.playing}
@@ -376,6 +421,12 @@
 
   function installInteraction(){
     var viewport=document.querySelector('.viewport');
+    viewport.addEventListener('pointermove',function(e){
+      if(runtime.pointer)return;
+      runtime.hoverPlace=nearestSelectable(e.clientX,e.clientY);
+      viewport.style.cursor=runtime.hoverPlace?'pointer':'';
+    },true);
+    viewport.addEventListener('pointerleave',function(){runtime.hoverPlace=null;viewport.style.cursor='';},true);
     viewport.addEventListener('pointerdown',function(e){runtime.pointer={x:e.clientX,y:e.clientY};},true);
     viewport.addEventListener('pointerup',function(e){
       if(!runtime.pointer)return;
@@ -408,8 +459,9 @@
   }
 
   function layerVisibleCount(id){
-    if(id==='cities')return CITIES.filter(visibleByTime).length;
-    if(id==='seismic')return SEISMIC.filter(visibleByTime).length;
+    if(id==='cities')return CITIES.filter(visibleFeature).length;
+    if(id==='seismic')return SEISMIC.filter(visibleFeature).length;
+    if(id==='heatmap'||id==='clusters')return CITIES.concat(SEISMIC).filter(visibleFeature).length;
     if(id==='migration')return typeof MIGRATION_ROUTES==='undefined'?0:Math.round(MIGRATION_ROUTES.length*runtime.dataTime);
     if(id==='ocean')return Object.keys(OCEAN_PATHS).length;
     if(id==='groundtrack')return 1;
@@ -422,6 +474,29 @@
     if(a)a.textContent=String(activeLayers.size);
     var n=0;activeLayers.forEach(function(id){n+=layerVisibleCount(id);});if(b)b.textContent=String(n);
     if(c)c.textContent=Math.round(runtime.dataTime*100)+'%';
+  }
+
+  function renderPlaceDetail(){
+    if(!drawer)return;
+    var box=drawer.querySelector('#convergencePlaceDetail');if(!box)return;
+    var p=runtime.selectedPlace;
+    if(!p){box.hidden=true;box.innerHTML='';return;}
+    var extra='';
+    if(p.type==='city'){
+      var neighborhoods={
+        cairo:['Historic Cairo','Zamalek','Heliopolis'],
+        london:['Westminster','South Bank','City of London'],
+        'new-york':['Lower Manhattan','Brooklyn Waterfront','Queens'],
+        tokyo:['Chiyoda','Shibuya','Asakusa'],
+        mumbai:['Fort','Bandra','Colaba'],
+        'sao-paulo':['Centro','Paulista','Pinheiros']
+      }[p.id]||['Historic core','Urban center','Regional corridor'];
+      extra='<div class="convergence-detail-tags">'+neighborhoods.map(function(n){return '<span>'+n+'</span>';}).join('')+'</div>'+
+        '<ol class="convergence-history"><li>Early settlement and geographic anchor</li><li>Regional network expansion</li><li>Modern metropolitan system</li></ol>';
+    }else{
+      extra='<div class="convergence-detail-tags"><span>'+p.lat.toFixed(2)+'° lat</span><span>'+p.lon.toFixed(2)+'° lon</span></div>';
+    }
+    box.hidden=false;box.innerHTML='<strong>'+p.name+'</strong><p>'+p.detail+'</p>'+extra;
   }
 
   function renderPlaces(){
@@ -446,6 +521,7 @@
       b.addEventListener('click',function(){selectPlace(place,true);});
       list.appendChild(b);
     });
+    renderPlaceDetail();
   }
 
   function formatPeriod(sec){
@@ -504,6 +580,7 @@
         '<section class="convergence-section active" data-section="layers">'+
           '<h3>Geospatial data engine</h3><p class="hint">Toggle deterministic local layers over the existing globe. This is an extensible layer registry, not a claim of live telemetry.</p>'+
           '<div class="convergence-layer-grid" id="convergenceLayerGrid"></div>'+
+          '<div class="convergence-row"><label for="convergenceRegion">Region</label><select id="convergenceRegion"><option value="global">Global</option><option value="americas">Americas</option><option value="europe">Europe</option><option value="africa-middle-east">Africa + Middle East</option><option value="asia-pacific">Asia-Pacific</option></select></div>'+
           '<div class="convergence-metrics">'+
             '<div class="convergence-metric"><span>Layers</span><strong id="convergenceMetricLayers">0</strong></div>'+
             '<div class="convergence-metric"><span>Features</span><strong id="convergenceMetricFeatures">0</strong></div>'+
@@ -517,6 +594,7 @@
           '<h3 id="convergencePlaceContext">Cities & human geography</h3><p class="hint">Select a place from the list or directly from a visible marker. Moon mode automatically switches this catalog to lunar landmarks.</p>'+
           '<input class="convergence-search" id="convergencePlaceSearch" type="search" placeholder="Search places or landmarks">'+
           '<div class="convergence-place-list" id="convergencePlaceList"></div>'+
+          '<div class="convergence-place-detail" id="convergencePlaceDetail" hidden></div>'+
           '<p class="convergence-provenance">Capability lineage: Moonstake landmark exploration plus Infinite City and Where Is Mr. Kim selection/camera interaction. Commerce, land ownership and game scoring are intentionally excluded.</p>'+
         '</section>'+
         '<section class="convergence-section" data-section="simulation">'+
@@ -527,7 +605,7 @@
             '<button class="convergence-action" type="button" data-orbit-preset="meo">MEO</button>'+
             '<button class="convergence-action" type="button" data-orbit-preset="geo">GEO</button>'+
           '</div>'+
-          '<div class="convergence-actions"><button class="convergence-action" id="convergenceSimToggle" type="button">Pause replay</button><button class="convergence-action" id="convergenceSimReset" type="button">Reset</button></div>'+
+          '<div class="convergence-actions"><button class="convergence-action" id="convergenceSimToggle" type="button">Pause replay</button><button class="convergence-action" id="convergenceSimTrack" type="button">Track spacecraft</button><button class="convergence-action" id="convergenceSimReset" type="button">Reset</button></div>'+
           '<p class="convergence-provenance">Capability lineage: Orbital Speeders fixed-step/replay and trajectory-prediction concepts. Racing, fuel economy, leaderboards and competitive mechanics are excluded.</p>'+
         '</section>'+
         '<section class="convergence-section" data-section="story">'+
@@ -547,6 +625,7 @@
     drawer.querySelector('.convergence-close').addEventListener('click',function(){drawer.hidden=true;runtime.drawerOpen=false;trigger.setAttribute('aria-expanded','false');});
     drawer.querySelectorAll('[data-convergence-tab]').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.convergenceTab);});});
     drawer.querySelector('#convergenceDataTime').addEventListener('input',function(e){runtime.dataTime=Number(e.target.value)/1000;updateMetrics();});
+    drawer.querySelector('#convergenceRegion').addEventListener('change',function(e){runtime.region=e.target.value;updateMetrics();renderPlaces();showToast(e.target.options[e.target.selectedIndex].text+' filter');});
     drawer.querySelector('#convergenceDataPlay').addEventListener('click',function(e){runtime.dataPlaying=!runtime.dataPlaying;e.target.textContent=runtime.dataPlaying?'Pause time':'Play time';});
     drawer.querySelector('#convergenceClearLayers').addEventListener('click',clearLayers);
     drawer.querySelector('#convergencePlaceSearch').addEventListener('input',function(e){runtime.search=e.target.value;renderPlaces();});
@@ -555,6 +634,7 @@
       clickExperience('orbit');setLayer('groundtrack',true);
     });});
     drawer.querySelector('#convergenceSimToggle').addEventListener('click',function(){runtime.sim.playing=!runtime.sim.playing;refreshSimulationUI();});
+    drawer.querySelector('#convergenceSimTrack').addEventListener('click',function(e){runtime.sim.track=!runtime.sim.track;e.target.classList.toggle('active',runtime.sim.track);e.target.textContent=runtime.sim.track?'Tracking spacecraft':'Track spacecraft';});
     drawer.querySelector('#convergenceSimReset').addEventListener('click',function(){runtime.sim.elapsed=0;refreshSimulationUI();});
     drawer.querySelector('#convergenceStoryRange').addEventListener('input',function(e){runtime.story.playing=false;renderAt(Number(e.target.value));});
     drawer.querySelector('#convergenceStoryToggle').addEventListener('click',function(){runtime.story.playing=!runtime.story.playing;if(runtime.story.time>=STORY_DURATION)runtime.story.time=0;document.getElementById('app').dataset.convergenceStory=runtime.story.playing?'true':'false';refreshStoryUI();});
@@ -582,6 +662,10 @@
     var dt=Math.min(.05,(now-runtime.last)/1000);runtime.last=now;
     if(runtime.dataPlaying){runtime.dataTime=(runtime.dataTime+dt*.045)%1;var dr=drawer&&drawer.querySelector('#convergenceDataTime');if(dr)dr.value=String(Math.round(runtime.dataTime*1000));updateMetrics();}
     if(runtime.sim.playing)runtime.sim.elapsed+=dt;
+    if(runtime.sim.track && state.experience==='orbit'){
+      var trackPhase=runtime.sim.elapsed/Math.max(1,orbitPeriodSeconds(runtime.sim.altitudeKm))*Math.PI*2;
+      state.yaw=-trackPhase*.55;state.pitch=Math.sin(trackPhase)*Math.min(.6,runtime.sim.inclinationDeg*Math.PI/360);
+    }
     if(runtime.story.playing){
       runtime.story.time+=dt*runtime.story.speed;
       if(runtime.story.time>=STORY_DURATION){runtime.story.time=STORY_DURATION;runtime.story.playing=false;document.getElementById('app').dataset.convergenceStory='false';}
@@ -599,6 +683,8 @@
   registerLayer('cities',{label:'Cities',description:'Persistent city and civilization markers',draw:drawCities});
   registerLayer('migration',{label:'Migration',description:'Human dispersal pathways through time',draw:drawMigration});
   registerLayer('seismic',{label:'Seismic',description:'Curated major earthquake signals',draw:drawSeismic});
+  registerLayer('heatmap',{label:'Heatmap',description:'Density field derived from visible geographic features',draw:drawHeatmap});
+  registerLayer('clusters',{label:'Clusters',description:'Screen-space aggregation of visible geographic features',draw:drawClusters});
   registerLayer('ocean',{label:'Currents',description:'Modeled large-scale circulation paths',draw:drawOcean});
   registerLayer('groundtrack',{label:'Ground track',description:'Representative deterministic orbital ground track',draw:drawGroundTrack});
 
@@ -616,6 +702,8 @@
       selectCity:function(id){var p=CITIES.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'city'},p),true);return !!p;},
       selectMoonLandmark:function(id){var p=MOON_LANDMARKS.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'moon'},p),true);return !!p;},
       setOrbit:function(altitudeKm,inclinationDeg){runtime.sim.altitudeKm=Math.max(160,Number(altitudeKm)||420);runtime.sim.inclinationDeg=Math.max(0,Math.min(180,Number(inclinationDeg)||0));runtime.sim.elapsed=0;refreshSimulationUI();return snapshot().orbit;},
+      setSimulationTime:function(seconds){runtime.sim.elapsed=Math.max(0,Number(seconds)||0);return snapshot().orbit;},
+      setRegion:function(region){var allowed=['global','americas','europe','africa-middle-east','asia-pacific'];runtime.region=allowed.indexOf(region)>=0?region:'global';var select=drawer&&drawer.querySelector('#convergenceRegion');if(select)select.value=runtime.region;updateMetrics();return runtime.region;},
       listLayers:function(){return Array.from(layerRegistry.values()).map(function(x){return {id:x.id,label:x.label,description:x.description};});},
       listCities:function(){return CITIES.slice();},
       listMoonLandmarks:function(){return MOON_LANDMARKS.slice();},

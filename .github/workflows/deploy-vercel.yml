@@ -87,7 +87,8 @@ jobs:
             echo "## Staged production artifact"
             echo
             echo "Certified revision: \`${{ steps.revision.outputs.sha }}\`"
-            echo "Immutable deployment: $url"\n            echo "Production domains have not moved yet."
+            echo "Immutable deployment: $url"
+            echo "Production domains have not moved yet."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify deployed revision

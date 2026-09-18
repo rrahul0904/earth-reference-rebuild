@@ -82,7 +82,7 @@
   ];
   var STORY_DURATION = STORY_SCENES.reduce(function(m,s){return Math.max(m,s.at+s.duration);},0);
 
-  var canvas, ctx, drawer, trigger, sourceTrigger, toast;
+  var canvas, ctx, drawer, trigger, sourceTrigger, toast, openConvergenceDrawer, closeConvergenceDrawer;
 
   function seeded(seed){
     var n=seed>>>0;
@@ -734,21 +734,21 @@
 
     toast=document.createElement('div');toast.className='convergence-toast';toast.setAttribute('role','status');toast.setAttribute('aria-live','polite');document.body.appendChild(toast);
 
-    function closeConvergence(){
+    closeConvergenceDrawer=function(){
       drawer.hidden=true;runtime.drawerOpen=false;runtime.hoverPlace=null;trigger.setAttribute('aria-expanded','false');
-    }
-    function openConvergence(){
+    };
+    openConvergenceDrawer=function(){
       var explore=document.getElementById('exploreMenu'),exploreButton=document.getElementById('exploreButton'),sources=document.getElementById('sourcesDialog');
       if(explore)explore.hidden=true;if(exploreButton)exploreButton.setAttribute('aria-expanded','false');
       if(sources&&sources.open)sources.close();
       drawer.hidden=false;runtime.drawerOpen=true;trigger.setAttribute('aria-expanded','true');
       renderPlaces();refreshSimulationUI();refreshStoryUI();
-    }
-    trigger.addEventListener('click',function(){if(runtime.drawerOpen)closeConvergence();else openConvergence();});
-    sourceTrigger.addEventListener('click',openConvergence);
-    drawer.querySelector('.convergence-close').addEventListener('click',closeConvergence);
+    };
+    trigger.addEventListener('click',function(){if(runtime.drawerOpen)closeConvergenceDrawer();else openConvergenceDrawer();});
+    sourceTrigger.addEventListener('click',openConvergenceDrawer);
+    drawer.querySelector('.convergence-close').addEventListener('click',closeConvergenceDrawer);
     var primaryExplore=document.getElementById('exploreButton');
-    if(primaryExplore)primaryExplore.addEventListener('click',function(){if(runtime.drawerOpen)closeConvergence();});
+    if(primaryExplore)primaryExplore.addEventListener('click',function(){if(runtime.drawerOpen)closeConvergenceDrawer();});
     drawer.querySelectorAll('[data-convergence-tab]').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.convergenceTab);});});
     drawer.querySelector('#convergenceDataTime').addEventListener('input',function(e){runtime.dataTime=Number(e.target.value)/1000;updateMetrics();});
     drawer.querySelector('#convergenceRegion').addEventListener('change',function(e){runtime.region=e.target.value;updateMetrics();renderPlaces();showToast(e.target.options[e.target.selectedIndex].text+' filter');});
@@ -838,8 +838,8 @@
       listCities:function(){return CITIES.slice();},
       listMoonLandmarks:function(){return MOON_LANDMARKS.slice();},
       storyDuration:STORY_DURATION,
-      open:openConvergence,
-      close:closeConvergence
+      open:function(){openConvergenceDrawer();},
+      close:function(){closeConvergenceDrawer();}
     };
     requestAnimationFrame(frame);
   }

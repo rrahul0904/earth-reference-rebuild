@@ -611,16 +611,30 @@
     if(!drawer)return;
     var box=drawer.querySelector('#convergencePlaceDetail');if(!box)return;
     var p=runtime.selectedPlace;
-    if(!p){box.hidden=true;box.innerHTML='';return;}
-    var extra='';
+    box.replaceChildren();
+    if(!p){box.hidden=true;return;}
+
+    var heading=document.createElement('strong');heading.textContent=String(p.name||'Selected feature');
+    var copy=document.createElement('p');copy.textContent=String(p.detail||p.region||'Selected geographic signal');
+    box.appendChild(heading);box.appendChild(copy);
+
+    var tags=document.createElement('div');tags.className='convergence-detail-tags';
+    function addTag(value){var span=document.createElement('span');span.textContent=String(value);tags.appendChild(span);}
     if(p.type==='city'){
-      var neighborhoods=cityNeighborhoods(p.id);
-      extra='<div class="convergence-detail-tags">'+neighborhoods.map(function(n){return '<span>'+n+'</span>';}).join('')+'</div>'+
-        '<ol class="convergence-history"><li>Early settlement and geographic anchor</li><li>Regional network expansion</li><li>Modern metropolitan system</li></ol>';
+      cityNeighborhoods(p.id).forEach(addTag);
+      box.appendChild(tags);
+      var history=document.createElement('ol');history.className='convergence-history';
+      ['Early settlement and geographic anchor','Regional network expansion','Modern metropolitan system'].forEach(function(value){
+        var li=document.createElement('li');li.textContent=value;history.appendChild(li);
+      });
+      box.appendChild(history);
     }else{
-      extra='<div class="convergence-detail-tags"><span>'+p.lat.toFixed(2)+'° lat</span><span>'+p.lon.toFixed(2)+'° lon</span></div>';
+      if(Number.isFinite(Number(p.lat)))addTag(Number(p.lat).toFixed(2)+'° lat');
+      if(Number.isFinite(Number(p.lon)))addTag(Number(p.lon).toFixed(2)+'° lon');
+      if(p.region)addTag(p.region);
+      if(tags.childNodes.length)box.appendChild(tags);
     }
-    box.hidden=false;box.innerHTML='<strong>'+p.name+'</strong><p>'+p.detail+'</p>'+extra;
+    box.hidden=false;
   }
 
   function renderPlaces(){
@@ -847,7 +861,8 @@
       setSimulationTime:function(seconds){runtime.sim.enabled=true;runtime.sim.elapsed=Math.max(0,Number(seconds)||0);return snapshot().orbit;},
       predictOrbit:function(altitudeKm,samples){return predictOrbit(altitudeKm,samples);},
       ingestEvent:ingestEvent,
-      clearEvents:function(){runtime.events.length=0;updateMetrics();},
+      selectEvent:function(id){var p=runtime.events.find(function(x){return x.id===String(id);});if(p)selectPlace(p,true);return !!p;},
+      clearEvents:function(){runtime.events.length=0;if(runtime.selectedPlace&&runtime.selectedPlace.type==='event')runtime.selectedPlace=null;updateMetrics();renderPlaceDetail();},
       focusGeo:function(lat,lon,zoom){return focusGeo(Number(lat)||0,Number(lon)||0,zoom);},
       setRegion:function(region){var allowed=['global','americas','europe','africa-middle-east','asia-pacific'];runtime.region=allowed.indexOf(region)>=0?region:'global';var select=drawer&&drawer.querySelector('#convergenceRegion');if(select)select.value=runtime.region;updateMetrics();return runtime.region;},
       listLayers:function(){return Array.from(layerRegistry.values()).map(function(x){return {id:x.id,label:x.label,description:x.description};});},

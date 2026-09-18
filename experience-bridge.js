@@ -63,11 +63,27 @@
     document.body.appendChild(share);
   }
 
+  function loadConvergence() {
+    if (!document.querySelector('link[data-earth-convergence]')) {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = '/earth-convergence.css';
+      css.dataset.earthConvergence = 'true';
+      document.head.appendChild(css);
+    }
+    if (document.querySelector('script[data-earth-convergence]')) return;
+    const script = document.createElement('script');
+    script.src = '/earth-convergence.js';
+    script.dataset.earthConvergence = 'true';
+    document.body.appendChild(script);
+  }
+
   setTimeout(() => {
     const existing = document.querySelector('script[data-visual-fixes]');
     if (existing) {
       loadMoonFidelity();
       loadShareState();
+      loadConvergence();
       return;
     }
     const script = document.createElement('script');
@@ -76,5 +92,6 @@
     script.addEventListener('load', loadMoonFidelity, { once: true });
     document.body.appendChild(script);
     loadShareState();
+    loadConvergence();
   }, 0);
 })();

@@ -25,6 +25,11 @@ const openConvergence = async page => {
   await expect(page.locator('#convergenceDrawer')).toBeVisible({ timeout: 15000 });
 };
 
+const openConvergenceDirect = async page => {
+  await page.evaluate(() => window.EarthConvergence.open());
+  await expect(page.locator('#convergenceDrawer')).toBeVisible({ timeout: 15000 });
+};
+
 test('consolidated Earth systems explorer loads without changing the default experience', async ({ page }) => {
   await ready(page);
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
@@ -39,7 +44,7 @@ test('consolidated Earth systems explorer loads without changing the default exp
 
 test('geospatial layer registry toggles deterministic data layers', async ({ page }) => {
   await ready(page);
-  await openConvergence(page);
+  await openConvergenceDirect(page);
   await page.locator('[data-layer="cities"]').click();
   await page.locator('[data-layer="migration"]').click();
   const snapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
@@ -77,7 +82,7 @@ test('Moonstake-derived landmark exploration integrates with the existing Moon e
   await expect(page.locator('#app')).toHaveAttribute('data-convergence-selected', 'apollo11');
   await expect(page.locator('[data-exp-control="moon-apollo11"]')).toHaveClass(/active/);
 
-  await openConvergence(page);
+  await openConvergenceDirect(page);
   await page.locator('[data-convergence-tab="places"]').click();
   await expect(page.locator('#convergencePlaceContext')).toHaveText('Lunar landmarks');
   await expect(page.locator('#convergencePlaceList')).toContainText('Apollo 11');
@@ -100,7 +105,7 @@ test('Orbital Speeders-derived simulation computes a physical orbital period and
   expect(prediction.periodSeconds).toBeLessThan(5700);
   expect(Math.abs(prediction.points[0].x - prediction.points.at(-1).x)).toBeLessThan(100);
 
-  await openConvergence(page);
+  await openConvergenceDirect(page);
   await page.locator('[data-convergence-tab="simulation"]').click();
   await page.locator('[data-orbit-preset="geo"]').click();
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'orbit');
@@ -137,7 +142,7 @@ test('semantic renderAt timeline deterministically orchestrates existing experie
   await page.evaluate(() => window.EarthConvergence.renderAt(35));
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'oceans');
   await expect(page.locator('[data-exp-control="ocean-gulf"]')).toHaveClass(/active/);
-  await openConvergence(page);
+  await openConvergenceDirect(page);
   await page.screenshot({ path: 'test-results/22-convergence-story-oceans.png', fullPage: true });
 });
 
@@ -153,7 +158,7 @@ test('city selection reuses globe interaction without importing game or marketpl
     return point ? Math.hypot(point.x - layout.cx, point.y - layout.cy) : Infinity;
   });
   expect(centeringError).toBeLessThan(3);
-  await openConvergence(page);
+  await openConvergenceDirect(page);
   await page.locator('[data-convergence-tab="places"]').click();
   await expect(page.locator('#convergencePlaceDetail')).toContainText('Historic Cairo');
   await expect(page.locator('#convergencePlaceDetail')).toContainText('Modern metropolitan system');

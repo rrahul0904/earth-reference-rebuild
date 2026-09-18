@@ -58,7 +58,7 @@ test('geospatial layer registry toggles deterministic data layers', async ({ pag
   await page.locator('[data-layer="clusters"]').click();
   const event = await page.evaluate(() => window.EarthConvergence.ingestEvent({
     id: 'qa-event',
-    name: 'QA geographic signal',
+    name: '<img id="xss-probe" src=x onerror="window.__xss=1"> QA geographic signal',
     region: 'North America',
     lat: 42.36,
     lon: -71.06,
@@ -66,6 +66,10 @@ test('geospatial layer registry toggles deterministic data layers', async ({ pag
     weight: 2
   }));
   expect(event.id).toBe('qa-event');
+  expect(await page.evaluate(() => window.EarthConvergence.selectEvent('qa-event'))).toBe(true);
+  await expect(page.locator('#convergencePlaceDetail')).toContainText('<img id="xss-probe"');
+  await expect(page.locator('#xss-probe')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__xss || 0)).toBe(0);
   await page.locator('[data-layer="events"]').click();
   await page.locator('#convergenceRegion').selectOption('americas');
   const filtered = await page.evaluate(() => window.EarthConvergence.snapshot());

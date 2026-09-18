@@ -14,6 +14,7 @@ test('consolidated Earth systems explorer loads without changing the default exp
   await expect(page.locator('#convergenceDrawer')).toBeVisible();
   await expect(page.locator('[data-layer]')).toHaveCount(5);
   await expect(page.locator('#convergenceMetricLayers')).toHaveText('0');
+  await page.screenshot({ path: 'test-results/20-convergence-layers.png', fullPage: true });
 });
 
 test('geospatial layer registry toggles deterministic data layers', async ({ page }) => {
@@ -42,6 +43,7 @@ test('Moonstake-derived landmark exploration integrates with the existing Moon e
   await expect(page.locator('#convergencePlaceContext')).toHaveText('Lunar landmarks');
   await expect(page.locator('#convergencePlaceList')).toContainText('Apollo 11');
   await expect(page.locator('#convergencePlaceList')).toContainText('Shackleton');
+  await page.screenshot({ path: 'test-results/21-convergence-moon-landmarks.png', fullPage: true });
 });
 
 test('Orbital Speeders-derived simulation computes a physical orbital period and replays in Orbit', async ({ page }) => {
@@ -79,6 +81,8 @@ test('semantic renderAt timeline deterministically orchestrates existing experie
   await page.evaluate(() => window.EarthConvergence.renderAt(35));
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'oceans');
   await expect(page.locator('[data-exp-control="ocean-gulf"]')).toHaveClass(/active/);
+  await page.locator('#convergenceTrigger').click();
+  await page.screenshot({ path: 'test-results/22-convergence-story-oceans.png', fullPage: true });
 });
 
 test('city selection reuses globe interaction without importing game or marketplace mechanics', async ({ page }) => {

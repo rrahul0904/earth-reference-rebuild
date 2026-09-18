@@ -63,3 +63,17 @@
 @media (prefers-reduced-motion:reduce){
   .convergence-toast,.app[data-convergence-story="true"] .hero,.app[data-convergence-story="true"] .experience-panel{transition:none}
 }
+
+.convergence-row select{
+  flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid rgba(214,239,246,.13);
+  background:rgba(0,0,0,.22);color:#edf6f7;font:inherit;font-size:10px;outline:none
+}
+.convergence-place-detail{
+  margin-top:10px;padding:12px;border:1px solid rgba(214,239,246,.1);border-radius:14px;background:rgba(255,255,255,.025)
+}
+.convergence-place-detail[hidden]{display:none}
+.convergence-place-detail strong{display:block;font-size:13px;font-weight:560;margin-bottom:5px}
+.convergence-place-detail p{margin:0 0 10px;font-size:10px;line-height:1.55;color:rgba(226,241,244,.56)}
+.convergence-detail-tags{display:flex;flex-wrap:wrap;gap:5px}
+.convergence-detail-tags span{padding:5px 7px;border-radius:999px;background:rgba(116,211,220,.08);font-size:8px;color:rgba(220,246,248,.66)}
+.convergence-history{margin:10px 0 0;padding-left:17px;color:rgba(226,241,244,.5);font-size:9px;line-height:1.6}

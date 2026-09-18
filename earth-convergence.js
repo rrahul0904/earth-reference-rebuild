@@ -82,7 +82,7 @@
   ];
   var STORY_DURATION = STORY_SCENES.reduce(function(m,s){return Math.max(m,s.at+s.duration);},0);
 
-  var canvas, ctx, drawer, trigger, toast;
+  var canvas, ctx, drawer, trigger, sourceTrigger, toast;
 
   function seeded(seed){
     var n=seed>>>0;
@@ -676,6 +676,10 @@
     trigger=document.createElement('button');trigger.type='button';trigger.className='convergence-trigger';trigger.id='convergenceTrigger';trigger.innerHTML='<span>07</span><strong>Systems</strong><small>Layers & simulations</small>';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','convergenceDrawer');
     exploreGrid.appendChild(trigger);
 
+    var sourcesShell=document.querySelector('#sourcesDialog .sources-shell');
+    sourceTrigger=document.createElement('button');sourceTrigger.type='button';sourceTrigger.className='convergence-source-entry';sourceTrigger.id='convergenceSourcesTrigger';sourceTrigger.textContent='Open Earth systems →';sourceTrigger.setAttribute('aria-controls','convergenceDrawer');
+    sourcesShell.appendChild(sourceTrigger);
+
     drawer=document.createElement('aside');drawer.className='convergence-drawer';drawer.id='convergenceDrawer';drawer.hidden=true;
     drawer.innerHTML=
       '<div class="convergence-head"><div><p>Earth systems</p><strong>Explore connected layers</strong></div><button class="convergence-close" type="button" aria-label="Close Earth systems">×</button></div>'+
@@ -733,12 +737,15 @@
     function closeConvergence(){
       drawer.hidden=true;runtime.drawerOpen=false;runtime.hoverPlace=null;trigger.setAttribute('aria-expanded','false');
     }
-    trigger.addEventListener('click',function(){
-      var explore=document.getElementById('exploreMenu'),exploreButton=document.getElementById('exploreButton');
+    function openConvergence(){
+      var explore=document.getElementById('exploreMenu'),exploreButton=document.getElementById('exploreButton'),sources=document.getElementById('sourcesDialog');
       if(explore)explore.hidden=true;if(exploreButton)exploreButton.setAttribute('aria-expanded','false');
-      drawer.hidden=!drawer.hidden;runtime.drawerOpen=!drawer.hidden;trigger.setAttribute('aria-expanded',runtime.drawerOpen?'true':'false');
-      if(runtime.drawerOpen){renderPlaces();refreshSimulationUI();refreshStoryUI();}
-    });
+      if(sources&&sources.open)sources.close();
+      drawer.hidden=false;runtime.drawerOpen=true;trigger.setAttribute('aria-expanded','true');
+      renderPlaces();refreshSimulationUI();refreshStoryUI();
+    }
+    trigger.addEventListener('click',function(){if(runtime.drawerOpen)closeConvergence();else openConvergence();});
+    sourceTrigger.addEventListener('click',openConvergence);
     drawer.querySelector('.convergence-close').addEventListener('click',closeConvergence);
     var primaryExplore=document.getElementById('exploreButton');
     if(primaryExplore)primaryExplore.addEventListener('click',function(){if(runtime.drawerOpen)closeConvergence();});
@@ -830,7 +837,9 @@
       listLayers:function(){return Array.from(layerRegistry.values()).map(function(x){return {id:x.id,label:x.label,description:x.description};});},
       listCities:function(){return CITIES.slice();},
       listMoonLandmarks:function(){return MOON_LANDMARKS.slice();},
-      storyDuration:STORY_DURATION
+      storyDuration:STORY_DURATION,
+      open:openConvergence,
+      close:closeConvergence
     };
     requestAnimationFrame(frame);
   }

@@ -8,9 +8,12 @@ const ready = async page => {
 
 const openConvergence = async page => {
   if (!(await page.locator('#convergenceDrawer').isVisible())) {
-    await page.locator('#exploreButton').click();
-    await expect(page.locator('#exploreMenu')).toBeVisible();
-    await openConvergence(page);
+    if (!(await page.locator('#exploreMenu').isVisible())) {
+      await page.locator('#exploreButton').click();
+      await expect(page.locator('#exploreMenu')).toBeVisible();
+    }
+    await expect(page.locator('#convergenceTrigger')).toBeVisible();
+    await page.locator('#convergenceTrigger').click();
     await expect(page.locator('#convergenceDrawer')).toBeVisible();
   }
 };
@@ -18,7 +21,7 @@ const openConvergence = async page => {
 test('consolidated Earth systems explorer loads without changing the default experience', async ({ page }) => {
   await ready(page);
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
-  await expect(page.locator('#convergenceTrigger')).toBeVisible();
+  await expect(page.locator('#convergenceTrigger')).toBeHidden();
   await openConvergence(page);
   await expect(page.locator('[data-layer]')).toHaveCount(7);
   await expect(page.locator('#convergenceMetricLayers')).toHaveText('0');
@@ -138,7 +141,7 @@ test('city selection reuses globe interaction without importing game or marketpl
 test('mobile keeps the consolidated explorer reachable and usable', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await ready(page);
-  await expect(page.locator('#convergenceTrigger')).toBeVisible();
+  await expect(page.locator('#convergenceTrigger')).toBeHidden();
   await openConvergence(page);
   await page.locator('[data-convergence-tab="places"]').click();
   await expect(page.locator('#convergencePlaceSearch')).toBeVisible();

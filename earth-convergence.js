@@ -108,6 +108,25 @@
     try{return projectGeo(lat,lon);}catch(e){return null;}
   }
 
+  function cameraForGeo(lat,lon){
+    var v=lonLatToVec(lon,lat),x=v[0],y=v[1],z=v[2],limit=1.1;
+    var p0=Math.atan2(y,z),candidates=[p0,p0-Math.PI,p0+Math.PI],best=null;
+    candidates.forEach(function(raw){
+      var pitch=Math.max(-limit,Math.min(limit,raw));
+      var residual=Math.abs(y*Math.cos(pitch)-z*Math.sin(pitch));
+      if(!best||residual<best.residual)best={pitch:pitch,residual:residual};
+    });
+    var pitch=best.pitch,z1=y*Math.sin(pitch)+z*Math.cos(pitch);
+    return {yaw:Math.atan2(-x,z1),pitch:pitch};
+  }
+
+  function focusGeo(lat,lon,zoom){
+    var camera=cameraForGeo(lat,lon);
+    state.yaw=camera.yaw;state.pitch=camera.pitch;state.velocityYaw=0;state.velocityPitch=0;
+    state.targetZoom=Math.max(state.targetZoom||1,Number(zoom)||1.34);
+    return camera;
+  }
+
   function lineSample(path,t){
     var n=path.length-1;
     var scaled=Math.min(n-.000001,Math.max(0,t*n));
@@ -508,11 +527,7 @@
       setTimeout(function(){if(place.control)clickControl(place.control);},0);
     }else{
       if(state.experience!=='planet' && state.experience!=='civilization')clickExperience('civilization');
-      if(typeof state.yaw==='number'){
-        state.yaw=(place.lon*Math.PI/180)-Math.PI/2;
-        state.pitch=Math.max(-.72,Math.min(.72,(place.lat||0)*Math.PI/360));
-        state.targetZoom=Math.max(state.targetZoom||1,1.34);
-      }
+      if(typeof state.yaw==='number')focusGeo(place.lat||0,place.lon||0,1.34);
     }
     renderPlaces();
     if(announce!==false)showToast(place.name+' selected');
@@ -833,6 +848,7 @@
       predictOrbit:function(altitudeKm,samples){return predictOrbit(altitudeKm,samples);},
       ingestEvent:ingestEvent,
       clearEvents:function(){runtime.events.length=0;updateMetrics();},
+      focusGeo:function(lat,lon,zoom){return focusGeo(Number(lat)||0,Number(lon)||0,zoom);},
       setRegion:function(region){var allowed=['global','americas','europe','africa-middle-east','asia-pacific'];runtime.region=allowed.indexOf(region)>=0?region:'global';var select=drawer&&drawer.querySelector('#convergenceRegion');if(select)select.value=runtime.region;updateMetrics();return runtime.region;},
       listLayers:function(){return Array.from(layerRegistry.values()).map(function(x){return {id:x.id,label:x.label,description:x.description};});},
       listCities:function(){return CITIES.slice();},

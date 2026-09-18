@@ -1,0 +1,65 @@
+/* Consolidated Earth systems explorer: opt-in UI for merged reverse-engineered capabilities. */
+.convergence-trigger{white-space:nowrap}
+.convergence-drawer{
+  position:fixed;z-index:42;top:72px;right:24px;width:min(390px,calc(100vw - 48px));
+  max-height:calc(100vh - 112px);overflow:hidden;display:flex;flex-direction:column;
+  border:1px solid rgba(214,239,246,.15);border-radius:20px;
+  background:linear-gradient(180deg,rgba(8,17,21,.94),rgba(3,9,12,.96));
+  box-shadow:0 28px 80px rgba(0,0,0,.46);backdrop-filter:blur(22px);
+  color:#edf6f7;font-family:inherit
+}
+.convergence-drawer[hidden]{display:none}
+.convergence-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 18px 12px;border-bottom:1px solid rgba(214,239,246,.1)}
+.convergence-head p{margin:0 0 5px;text-transform:uppercase;letter-spacing:.14em;font-size:10px;color:rgba(214,239,246,.56)}
+.convergence-head strong{font-size:17px;font-weight:520;letter-spacing:-.015em}
+.convergence-close{border:0;background:transparent;color:rgba(235,247,249,.72);font-size:24px;line-height:1;cursor:pointer;padding:0 2px}
+.convergence-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:10px 12px;border-bottom:1px solid rgba(214,239,246,.08)}
+.convergence-tabs button,.convergence-chip,.convergence-action,.convergence-place{
+  border:1px solid rgba(214,239,246,.13);background:rgba(255,255,255,.035);color:rgba(235,247,249,.78);
+  border-radius:999px;min-height:34px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer
+}
+.convergence-tabs button.active,.convergence-chip.active,.convergence-action.active{
+  border-color:rgba(168,234,239,.42);background:rgba(108,211,220,.12);color:#efffff
+}
+.convergence-body{overflow:auto;padding:14px 16px 18px;overscroll-behavior:contain}
+.convergence-section{display:none}.convergence-section.active{display:block}
+.convergence-section h3{font-size:13px;margin:0 0 8px;font-weight:560}
+.convergence-section .hint{margin:0 0 14px;font-size:11px;line-height:1.55;color:rgba(226,241,244,.56)}
+.convergence-layer-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.convergence-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}
+.convergence-metric{padding:10px;border:1px solid rgba(214,239,246,.09);border-radius:12px;background:rgba(255,255,255,.025)}
+.convergence-metric span{display:block;text-transform:uppercase;letter-spacing:.1em;font-size:8px;color:rgba(226,241,244,.45);margin-bottom:5px}
+.convergence-metric strong{font-size:13px;font-weight:540}
+.convergence-row{display:flex;align-items:center;gap:8px;margin:10px 0}
+.convergence-row input[type="range"]{flex:1;accent-color:#bdecef}
+.convergence-row label{font-size:10px;color:rgba(226,241,244,.54);min-width:72px}
+.convergence-place-list{display:grid;gap:7px}
+.convergence-place{border-radius:13px;text-align:left;display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;min-height:48px}
+.convergence-place strong{font-size:12px;font-weight:520}.convergence-place small{grid-column:1/2;color:rgba(226,241,244,.48);font-size:9px}
+.convergence-place span{grid-row:1/3;grid-column:2;color:rgba(190,234,237,.66);font-size:10px}
+.convergence-place.active{border-color:rgba(168,234,239,.45);background:rgba(108,211,220,.1)}
+.convergence-search{width:100%;box-sizing:border-box;margin:0 0 10px;padding:10px 12px;border-radius:11px;border:1px solid rgba(214,239,246,.13);background:rgba(0,0,0,.18);color:#edf6f7;outline:none}
+.convergence-search:focus{border-color:rgba(168,234,239,.5)}
+.convergence-sim-card,.convergence-story-card{border:1px solid rgba(214,239,246,.09);border-radius:14px;padding:12px;background:rgba(255,255,255,.024);margin-bottom:10px}
+.convergence-sim-card strong,.convergence-story-card strong{display:block;font-size:13px;margin-bottom:5px}
+.convergence-sim-card p,.convergence-story-card p{margin:0;font-size:10px;line-height:1.5;color:rgba(226,241,244,.53)}
+.convergence-actions{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.convergence-action{border-radius:10px}
+.convergence-progress{height:3px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:10px}
+.convergence-progress i{display:block;height:100%;width:0;background:rgba(181,239,241,.74)}
+.convergence-provenance{margin-top:14px;padding-top:12px;border-top:1px solid rgba(214,239,246,.08);font-size:9px;line-height:1.5;color:rgba(226,241,244,.4)}
+.convergence-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+.convergence-toast{position:fixed;z-index:60;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  padding:9px 12px;border:1px solid rgba(214,239,246,.15);border-radius:999px;background:rgba(4,12,15,.92);color:#e9f7f8;
+  font-size:10px;transition:opacity .18s ease,transform .18s ease}
+.convergence-toast.show{opacity:1;transform:translate(-50%,0)}
+.app[data-convergence-story="true"] .hero,.app[data-convergence-story="true"] .experience-panel{transition:opacity .35s ease,transform .35s ease}
+@media (max-width:900px){
+  .convergence-drawer{top:auto;right:10px;left:10px;bottom:12px;width:auto;max-height:62vh;border-radius:18px}
+  .convergence-head{padding:14px 15px 10px}.convergence-tabs{padding:8px}
+  .convergence-body{padding:12px 13px 16px}.convergence-metrics{grid-template-columns:repeat(3,1fr)}
+  .convergence-trigger{display:block!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .convergence-toast,.app[data-convergence-story="true"] .hero,.app[data-convergence-story="true"] .experience-panel{transition:none}
+}

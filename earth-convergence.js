@@ -313,13 +313,13 @@
     runtime.story.scene=index;
     document.getElementById('app').dataset.convergenceStory='true';
     clickExperience(scene.exp);
+    if(scene.place){
+      var selected=MOON_LANDMARKS.find(function(x){return x.id===scene.place;});
+      if(selected)selectPlace(Object.assign({type:'moon'},selected),false);
+    }
     setTimeout(function(){
       if(scene.age!==undefined && typeof setAge==='function')setAge(scene.age);
       if(scene.control)clickControl(scene.control);
-      if(scene.place){
-        var p=MOON_LANDMARKS.find(function(x){return x.id===scene.place;});
-        if(p)selectPlace(Object.assign({type:'moon'},p),false);
-      }
       refreshStoryUI();
     },0);
   }

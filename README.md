@@ -60,3 +60,17 @@ Paleogeographic and deep-time craton reconstruction assets are adapted from `szu
 See `THIRD_PARTY_NOTICES.md` for detailed provenance notes.
 
 This project is an independent implementation and is not affiliated with the reference site.
+
+
+## Earth systems convergence
+
+The opt-in **Layers** explorer consolidates selected clean-room capabilities from prior reverse-engineering work without changing the default reference composition:
+
+- geospatial layer registry with deterministic time playback
+- cities / human-geography exploration
+- searchable Moon landmarks
+- deterministic LEO / MEO / GEO orbital simulation and ground tracks
+- point selection and camera targeting
+- semantic Story timeline with reproducible `renderAt(t)` state
+
+See `docs/CONSOLIDATED_REVERSE_ENGINEERING.md` for source-by-source capability mapping, exclusions, architecture and verification boundaries.

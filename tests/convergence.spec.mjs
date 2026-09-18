@@ -24,7 +24,7 @@ test('geospatial layer registry toggles deterministic data layers', async ({ pag
   const snapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
   expect(snapshot.activeLayers).toEqual(['cities', 'migration']);
   await expect(page.locator('#convergenceMetricLayers')).toHaveText('2');
-  await page.locator('#convergenceDataTime').fill('500');
+  await page.locator('#convergenceDataTime').evaluate(el => { el.value = '500'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   const timeSnapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
   expect(timeSnapshot.dataTime).toBeCloseTo(0.5, 2);
 });

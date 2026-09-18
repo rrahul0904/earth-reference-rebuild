@@ -13,6 +13,8 @@ const visualFixes = fs.readFileSync(new URL('visual-fixes.js', root),'utf8');
 const moon = fs.readFileSync(new URL('moon-fidelity.js', root),'utf8');
 const polish = fs.readFileSync(new URL('reference-polish.js', root),'utf8');
 const finalizer = fs.readFileSync(new URL('reference-finalizer.js', root),'utf8');
+const convergence = fs.readFileSync(new URL('earth-convergence.js', root),'utf8');
+const convergenceCss = fs.readFileSync(new URL('earth-convergence.css', root),'utf8');
 
 for (const id of ['globe','timeline','playButton','sourcesDialog','exploreMenu','mobileTimeline']) assert.ok(html.includes('id="' + id + '"'), 'missing ' + id);
 for (let i=1;i<=5;i++) assert.ok(html.includes('/app-' + i + '.js'), 'missing app-' + i + '.js script');
@@ -45,6 +47,14 @@ assert.ok(finalizer.includes('drawOceanShade'), 'reference ocean lighting pass m
 for (const file of ['visual-fixes.js','moon-fidelity.js','reference-polish.js','reference-finalizer.js']) {
   assert.ok(bridge.includes('/' + file), 'experience bridge must load ' + file);
 }
+assert.ok(bridge.includes('/earth-convergence.js'), 'experience bridge must load convergence engine');
+assert.ok(bridge.includes('/earth-convergence.css'), 'experience bridge must load convergence styles');
+for (const capability of ['registerLayer','renderAt','selectMoonLandmark','setOrbit','STORY_SCENES','orbitPeriodSeconds']) {
+  assert.ok(convergence.includes(capability), 'missing convergence capability ' + capability);
+}
+assert.ok(convergenceCss.includes('.convergence-drawer'), 'convergence explorer styling missing');
+assert.doesNotThrow(() => new Function(convergence), 'convergence engine must parse as classic browser JavaScript');
+for (const excluded of ['Buy land','Leaderboard','Fuel economy']) assert.ok(!convergence.includes(excluded), 'excluded product mechanic leaked into convergence engine: ' + excluded);
 
 const timelineFns = js.slice(js.indexOf('function clamp'), js.indexOf('function formatAge'));
 const timeline = new Function(timelineFns + '; return {ageToSlider, sliderToAge};')();

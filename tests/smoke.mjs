@@ -57,6 +57,8 @@ assert.ok(convergenceCss.includes('.convergence-drawer'), 'convergence explorer 
 assert.ok(!convergence.includes("box.innerHTML='<strong>'+p.name"), 'event detail rendering must avoid HTML injection');
 assert.ok(deployWorkflow.includes('release.json'), 'production workflow must stamp the certified revision');
 assert.ok(deployWorkflow.includes('Verify canonical production URL and exact SHA'), 'production workflow must verify the canonical exact SHA');
+assert.ok(deployWorkflow.includes('--prod --skip-domain'), 'production workflow must stage without moving domains');
+assert.ok(deployWorkflow.includes('vercel promote'), 'production workflow must promote only after immutable verification');
 assert.ok(deployWorkflow.includes('VERCEL_TOKEN is required for production deployment'), 'production deployment must remain fail-closed without authorization');
 assert.doesNotThrow(() => new Function(convergence), 'convergence engine must parse as classic browser JavaScript');
 for (const excluded of ['Buy land','Leaderboard','Fuel economy']) assert.ok(!convergence.includes(excluded), 'excluded product mechanic leaked into convergence engine: ' + excluded);

@@ -6,12 +6,20 @@ const ready = async page => {
   await page.waitForFunction(() => document.querySelector('#app')?.dataset.convergenceReady === 'true');
 };
 
+const openConvergence = async page => {
+  if (!(await page.locator('#convergenceDrawer').isVisible())) {
+    await page.locator('#exploreButton').click();
+    await expect(page.locator('#exploreMenu')).toBeVisible();
+    await openConvergence(page);
+    await expect(page.locator('#convergenceDrawer')).toBeVisible();
+  }
+};
+
 test('consolidated Earth systems explorer loads without changing the default experience', async ({ page }) => {
   await ready(page);
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
   await expect(page.locator('#convergenceTrigger')).toBeVisible();
-  await page.locator('#convergenceTrigger').click();
-  await expect(page.locator('#convergenceDrawer')).toBeVisible();
+  await openConvergence(page);
   await expect(page.locator('[data-layer]')).toHaveCount(7);
   await expect(page.locator('#convergenceMetricLayers')).toHaveText('0');
   const baseSnapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
@@ -21,7 +29,7 @@ test('consolidated Earth systems explorer loads without changing the default exp
 
 test('geospatial layer registry toggles deterministic data layers', async ({ page }) => {
   await ready(page);
-  await page.locator('#convergenceTrigger').click();
+  await openConvergence(page);
   await page.locator('[data-layer="cities"]').click();
   await page.locator('[data-layer="migration"]').click();
   const snapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
@@ -47,7 +55,7 @@ test('Moonstake-derived landmark exploration integrates with the existing Moon e
   await expect(page.locator('#app')).toHaveAttribute('data-convergence-selected', 'apollo11');
   await expect(page.locator('[data-exp-control="moon-apollo11"]')).toHaveClass(/active/);
 
-  await page.locator('#convergenceTrigger').click();
+  await openConvergence(page);
   await page.locator('[data-convergence-tab="places"]').click();
   await expect(page.locator('#convergencePlaceContext')).toHaveText('Lunar landmarks');
   await expect(page.locator('#convergencePlaceList')).toContainText('Apollo 11');
@@ -70,7 +78,7 @@ test('Orbital Speeders-derived simulation computes a physical orbital period and
   expect(prediction.periodSeconds).toBeLessThan(5700);
   expect(Math.abs(prediction.points[0].x - prediction.points.at(-1).x)).toBeLessThan(100);
 
-  await page.locator('#convergenceTrigger').click();
+  await openConvergence(page);
   await page.locator('[data-convergence-tab="simulation"]').click();
   await page.locator('[data-orbit-preset="geo"]').click();
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'orbit');
@@ -106,7 +114,7 @@ test('semantic renderAt timeline deterministically orchestrates existing experie
   await page.evaluate(() => window.EarthConvergence.renderAt(35));
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'oceans');
   await expect(page.locator('[data-exp-control="ocean-gulf"]')).toHaveClass(/active/);
-  await page.locator('#convergenceTrigger').click();
+  await openConvergence(page);
   await page.screenshot({ path: 'test-results/22-convergence-story-oceans.png', fullPage: true });
 });
 
@@ -116,7 +124,7 @@ test('city selection reuses globe interaction without importing game or marketpl
   expect(selected).toBeTruthy();
   await expect(page.locator('#app')).toHaveAttribute('data-convergence-selected', 'cairo');
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
-  await page.locator('#convergenceTrigger').click();
+  await openConvergence(page);
   await page.locator('[data-convergence-tab="places"]').click();
   await expect(page.locator('#convergencePlaceDetail')).toContainText('Historic Cairo');
   await expect(page.locator('#convergencePlaceDetail')).toContainText('Modern metropolitan system');
@@ -131,8 +139,7 @@ test('mobile keeps the consolidated explorer reachable and usable', async ({ pag
   await page.setViewportSize({ width: 390, height: 844 });
   await ready(page);
   await expect(page.locator('#convergenceTrigger')).toBeVisible();
-  await page.locator('#convergenceTrigger').click();
-  await expect(page.locator('#convergenceDrawer')).toBeVisible();
+  await openConvergence(page);
   await page.locator('[data-convergence-tab="places"]').click();
   await expect(page.locator('#convergencePlaceSearch')).toBeVisible();
 });

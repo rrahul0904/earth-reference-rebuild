@@ -147,6 +147,12 @@ test('city selection reuses globe interaction without importing game or marketpl
   expect(selected).toBeTruthy();
   await expect(page.locator('#app')).toHaveAttribute('data-convergence-selected', 'cairo');
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
+  const centeringError = await page.evaluate(() => {
+    const point = projectGeo(30.0444, 31.2357);
+    const layout = getSphereLayout();
+    return point ? Math.hypot(point.x - layout.cx, point.y - layout.cy) : Infinity;
+  });
+  expect(centeringError).toBeLessThan(3);
   await openConvergence(page);
   await page.locator('[data-convergence-tab="places"]').click();
   await expect(page.locator('#convergencePlaceDetail')).toContainText('Historic Cairo');

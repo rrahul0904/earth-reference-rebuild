@@ -35,7 +35,7 @@ test('consolidated Earth systems explorer loads without changing the default exp
   await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
   await expect(page.locator('#convergenceTrigger')).toBeHidden();
   await openConvergence(page);
-  await expect(page.locator('[data-layer]')).toHaveCount(8);
+  await expect(page.locator('[data-layer]')).toHaveCount(9);
   await expect(page.locator('#convergenceMetricLayers')).toHaveText('0');
   const baseSnapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
   expect(baseSnapshot.orbit.enabled).toBe(false);
@@ -197,4 +197,31 @@ test('mobile keeps the consolidated explorer reachable and usable', async ({ pag
   await openConvergence(page);
   await page.locator('[data-convergence-tab="places"]').click();
   await expect(page.locator('#convergencePlaceSearch')).toBeVisible();
+});
+
+
+test('World-Sim donor exposes a deterministic opt-in Living World layer', async ({ page }) => {
+  await ready(page);
+  await page.waitForFunction(() => document.querySelector('#app')?.dataset.livingWorldReady === 'true');
+  await expect(page.locator('#app')).toHaveAttribute('data-experience', 'planet');
+
+  const first = await page.evaluate(() => ({
+    seed: window.LivingWorldDemo.seed,
+    tick: window.LivingWorldDemo.tick,
+    stats: window.LivingWorldDemo.stats(),
+    snapshot: window.LivingWorldDemo.snapshot()
+  }));
+  const second = await page.evaluate(() => window.LivingWorldDemo.snapshot());
+  expect(first.seed).toBe('earth-living-world-demo-v1');
+  expect(first.tick).toBe(2160);
+  expect(first.stats.livingPopulation).toBeGreaterThan(0);
+  expect(first.stats.settlements).toBeGreaterThanOrEqual(3);
+  expect(second).toBe(first.snapshot);
+
+  await openConvergenceDirect(page);
+  await expect(page.locator('[data-layer="living-world"]')).toBeVisible();
+  await page.locator('[data-layer="living-world"]').click();
+  const snapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
+  expect(snapshot.activeLayers).toContain('living-world');
+  await page.screenshot({ path: 'test-results/23-convergence-living-world.png', fullPage: true });
 });

@@ -4,6 +4,7 @@ const ready = async page => {
   await page.goto('/');
   await page.waitForFunction(() => document.querySelector('#app')?.dataset.ready === 'true');
   await page.waitForFunction(() => document.querySelector('#app')?.dataset.convergenceReady === 'true');
+  await page.waitForFunction(() => document.querySelector('#app')?.dataset.livingWorldReady === 'true');
 };
 
 const openConvergence = async page => {

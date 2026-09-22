@@ -63,6 +63,15 @@
     document.body.appendChild(share);
   }
 
+  function loadLivingWorld() {
+    if (document.querySelector('script[data-living-world]')) return;
+    const living = document.createElement('script');
+    living.type = 'module';
+    living.src = '/living-world-browser.js';
+    living.dataset.livingWorld = 'true';
+    document.body.appendChild(living);
+  }
+
   function loadConvergence() {
     if (!document.querySelector('link[data-earth-convergence]')) {
       const css = document.createElement('link');
@@ -71,10 +80,11 @@
       css.dataset.earthConvergence = 'true';
       document.head.appendChild(css);
     }
-    if (document.querySelector('script[data-earth-convergence]')) return;
+    if (document.querySelector('script[data-earth-convergence]')) { loadLivingWorld(); return; }
     const script = document.createElement('script');
     script.src = '/earth-convergence.js';
     script.dataset.earthConvergence = 'true';
+    script.addEventListener('load', loadLivingWorld, { once: true });
     document.body.appendChild(script);
   }
 

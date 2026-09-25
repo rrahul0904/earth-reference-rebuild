@@ -31,6 +31,24 @@ The launch post and public pages establish the following behavior:
 
 These are product-behavior observations only. They do **not** establish the donor’s private data model, rendering stack, infrastructure, content-generation process or internal APIs.
 
+
+## Reddit comment signals incorporated
+
+The launch-thread comments add useful product signals beyond the original post:
+
+- A commenter specifically validated the **region → civilization** flow as an intuitive entry point for a 9-year-old. Preserve that low-friction spatial navigation as a primary path rather than burying the experience behind search or dense menus.
+- A commenter immediately requested **multilingual support**, and the creator responded that native multilingual support would be added. Locale-ready content and UI therefore move from a nice-to-have to an explicit product requirement.
+- The creator’s Punic Wars reply illustrates another useful interaction principle: history becomes more engaging when users can connect civilizations and conflicts to family, culture, migration, and present-day identity. Our version should support optional **personal connection / heritage exploration** without inferring a user’s background.
+- The comment thread is still young, so current feedback is directional rather than a statistically representative UX study. Continue treating future corrections, requested civilizations, and usability reports as evidence for backlog changes, not as unquestioned requirements.
+
+### Backlog changes from comments
+
+- [ ] Keep region-first navigation as a first-class mobile and desktop acceptance criterion.
+- [ ] Add locale routing and translation fallback tests in the initial architecture, even if Phase A content ships English-first.
+- [ ] Add a neutral “connections” surface that can trace trade, migration, conflict, succession, and cultural exchange across civilizations.
+- [ ] Design an optional user-driven heritage/interest path where the user explicitly chooses regions/cultures to explore; never infer ancestry or identity.
+- [ ] Track historical-correction feedback with provenance and editorial-review status.
+
 ## Clean-room boundaries
 
 Do not copy or scrape proprietary prose, illustrations, event descriptions, hidden endpoints or private datasets.

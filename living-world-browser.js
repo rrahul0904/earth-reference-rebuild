@@ -12,12 +12,15 @@ function populationBySettlement() {
   return counts;
 }
 
+// This demo is immutable after initialization; counts need no per-frame scan.
+const settlementPopulation = populationBySettlement();
+
 function drawLivingWorld(tools = {}) {
   const { ctx, project, experience } = tools;
   if (!ctx || typeof project !== 'function') return;
   if (experience !== 'planet' && experience !== 'civilization') return;
 
-  const counts = populationBySettlement();
+  const counts = settlementPopulation;
   ctx.save();
   ctx.font = '10px system-ui, -apple-system, sans-serif';
   for (const settlement of Object.values(world.settlements)) {

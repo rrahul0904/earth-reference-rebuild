@@ -55,3 +55,38 @@ tickLivingWorld(differentSeed, 10_000);
 assert.notEqual(hashLivingWorld(deterministicA), hashLivingWorld(differentSeed), 'different seeds should create different worlds');
 
 console.log('Living World deterministic kernel checks passed.');
+
+for (const options of [
+  { population: NaN },
+  { population: 20.5 },
+  { population: 201 },
+  { population: 24, maxPopulation: 23 },
+  { population: 24, maxPopulation: NaN },
+  { seed: 'x'.repeat(257) }
+]) assert.throws(() => createLivingWorld(options), 'unbounded or non-integer world options must be rejected');
+
+const guarded = createLivingWorld({ seed: 'bounds', population: 30, settlementCount: 3 });
+assert.throws(() => tickLivingWorld(guarded, Infinity), /integer/);
+assert.throws(() => tickLivingWorld(guarded, 1_000_001), /integer/);
+assert.throws(() => runExperiment(guarded, Object.keys(guarded.people)[0], { inputs: ['x'.repeat(65)] }), /64 characters/);
+assert.throws(() => killPerson(guarded, Object.keys(guarded.people)[0], 'x'.repeat(257)), /256 characters/);
+
+tickLivingWorld(guarded, 10_000);
+for (const person of Object.values(guarded.people)) {
+  const home = guarded.households[person.householdId];
+  assert.equal(home.settlementId, person.settlementId, 'household and person settlement references must agree');
+  assert.ok(home.members.includes(person.id), 'every person must be listed in exactly their household');
+}
+
+const malformed = JSON.parse(snapshotLivingWorld(guarded));
+malformed.people[Object.keys(malformed.people)[0]].householdId = 'h999999';
+assert.throws(() => restoreLivingWorld(malformed), /missing household|inconsistent household membership/);
+assert.throws(() => restoreLivingWorld({ schema: 1, people: { evil: { constructor: { prototype: { polluted: true } } } } }), /unsafe snapshot key|invalid/);
+assert.throws(() => restoreLivingWorld('x'.repeat(16_000_001)), /snapshot too large/);
+const finalEventSlot = createLivingWorld({ seed: 'final-event-slot' });
+finalEventSlot.events.length = 99_999;
+finalEventSlot.next.event = 100_000;
+const nonDiscovery = runExperiment(finalEventSlot, Object.keys(finalEventSlot.people)[0], { inputs: ['unknown'] });
+assert.equal(nonDiscovery.discovered, null, 'a non-discovery experiment can use the final event slot');
+assert.equal(finalEventSlot.events.length, 100_000);
+console.log('Living World bounds, snapshot validation and household invariants passed.');

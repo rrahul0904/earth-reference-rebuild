@@ -1,0 +1,522 @@
+{
+  "schemaVersion": 1,
+  "observedOn": "2026-10-01",
+  "repository": "rrahul0904/earth-reference-rebuild",
+  "canonicalUrl": "https://earth-reference-rebuild.vercel.app",
+  "startingMainSha": "e314e8c015bb87a481985b195148c2585b0f10bf",
+  "livingWorldHead": "e95d6f9c435ae68e78118fe85d9281bf0522992b",
+  "overallStatus": "IN_PROGRESS",
+  "agents": [
+    {
+      "agent": 0,
+      "name": "orchestrator",
+      "assignment": "Inspect canonical repo/PR/CI/release/tracker state; lead integration",
+      "taskId": "EARTH-00",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [
+        "npm ci --no-audit --no-fund",
+        "npm test: pass",
+        "tests/quality.spec.mjs: 9/9",
+        "tests/security.spec.mjs: 9/9",
+        "tests/convergence.spec.mjs: 8/8",
+        "tests/browser.spec.mjs: 4/6 then stopped by user direction"
+      ],
+      "findings": [
+        "Read-only current remote check: main e314e8c; PR #13 remains draft/open/unmerged and clean. Its supplied quality run #121 was verified as successful on exact PR head e95d6f9c and the unexpired browser artifact exists; main quality run #114 is on current main.",
+        "Canonical production returns HTTP 200 but /release.json returns 404; no production source SHA is proven.",
+        "Local integration tests are green for static, quality, security and convergence suites; full legacy browser matrix and hosted release remain incomplete."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [
+        "No authenticated GitHub write/Actions or Vercel project credential is available to push the candidate, obtain exact-head CI, stage/promote an immutable artifact, and prove canonical SHA equality.",
+        "Full browser/visual acceptance and exact candidate Actions/artifact/deployment evidence remain incomplete; the local browser pass was intentionally stopped before all suites finished.",
+        "Canonical tracker connection is unavailable, so RE-164/165/166 and World-Sim/RomanCivilizations reconciliation could be documented but not written to the external tracker."
+      ],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 1,
+      "name": "core-ux",
+      "assignment": "Audit Planet, Deep Time, Civilization, earthquakes, oceans, Solar and history UX",
+      "taskId": "EARTH-01",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [
+        "tests/quality.spec.mjs: 9/9",
+        "tests/browser.spec.mjs: 4/6"
+      ],
+      "findings": [
+        "Existing core and responsive acceptance tests: 4/6 passed before browser work was stopped; 2 were not run. Deep-time/history and Story reduced-motion tests passed in the quality suite."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 2,
+      "name": "living-world",
+      "assignment": "Audit and harden deterministic opt-in simulator and browser integration",
+      "taskId": "EARTH-02",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-living-world",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth-living-world",
+      "commands": [],
+      "tests": [
+        "npm test Living World deterministic and bounds checks: pass",
+        "tests/convergence.spec.mjs Living World layer coverage included: 8/8"
+      ],
+      "findings": [
+        "Integrated Living World bounds, household consistency, snapshot graph validation and cache changes passed deterministic/replay/restore/bounds tests; the opt-in layer passed convergence browser acceptance.",
+        "PR #13 remains open and draft remotely; no merge or exact-head CI evidence exists."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 3,
+      "name": "orbit-moon-geospatial",
+      "assignment": "Audit orbit, lunar landmarks, geospatial layers, filters and city drill-down",
+      "taskId": "EARTH-03",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [
+        "tests/convergence.spec.mjs: 8/8",
+        "tests/quality.spec.mjs: 9/9"
+      ],
+      "findings": [
+        "Current convergence suite verifies orbit predictions/presets, geospatial layers, filters, regional place listing, lunar landmark, city drill-down and neighborhood keyboard focus."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 4,
+      "name": "story",
+      "assignment": "Audit deterministic Story, user interruption and reduced motion",
+      "taskId": "EARTH-04",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [
+        "tests/quality.spec.mjs: Story coverage passed within 9/9",
+        "tests/convergence.spec.mjs: timeline coverage passed within 8/8"
+      ],
+      "findings": [
+        "Story deterministic timeline, interruption/navigation, reduced-motion scenes and Pause behavior including mobile passed local browser coverage."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 5,
+      "name": "quality",
+      "assignment": "Independent static/browser/determinism/accessibility verification",
+      "taskId": "EARTH-05",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-quality",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth-quality",
+      "commands": [],
+      "tests": [
+        "npm test: pass; release metadata 3/3",
+        "tests/quality.spec.mjs: 9/9",
+        "tests/security.spec.mjs: 9/9",
+        "tests/convergence.spec.mjs: 8/8",
+        "tests/browser.spec.mjs: 4/6"
+      ],
+      "findings": [
+        "Release metadata, smoke, Living World deterministic invariants and three newer browser suites passed. User-directed stop left two legacy visual tests and productization/resilience suites unrun."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 6,
+      "name": "security-resilience",
+      "assignment": "Audit malformed public inputs, stored preferences, event retention and deployment secrets",
+      "taskId": "EARTH-06",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-security",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth-security",
+      "commands": [],
+      "tests": [
+        "tests/security.spec.mjs: 9/9",
+        "npm test: pass"
+      ],
+      "findings": [
+        "Malformed preference, URL/state, unsafe event text/coordinates, duplicate ID and retention adversarial checks pass locally. Deployment workflow refuses to proceed without a safely resolved rollback target and requires current-main quality SHA."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 7,
+      "name": "visual-accessibility",
+      "assignment": "Review desktop/mobile screenshots for required Earth capabilities",
+      "taskId": "EARTH-07",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [],
+      "findings": [
+        "Browser screenshot artifacts exist from passing test runs, but the requested full independent visual/accessibility matrix was not completed."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [
+        "Finish browser screenshot review when authenticated hosted candidate artifacts are available; verify mobile, systems, moon, Living World and key scenes."
+      ],
+      "confidence": "low",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 8,
+      "name": "history-tracker",
+      "assignment": "Reconcile donor records, project issue/PR map and excluded Roman capability",
+      "taskId": "EARTH-08",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [],
+      "findings": [
+        "Repository history and donor/tracker classification recorded in TRACKER_RECONCILIATION.md; no canonical World-Sim ID invented; no verified STEMKit requirement found."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [
+        "Canonical tracker credentials/connector are unavailable; RE-164/165/166 and superseded Roman mapping were not edited externally."
+      ],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 9,
+      "name": "performance-webgl",
+      "assignment": "Measure renderer and simulator performance; bound repeated expensive work",
+      "taskId": "EARTH-09",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [],
+      "findings": [
+        "Orbital prediction now caches by altitude and public inputs are bounded; full mobile/frame-time/memory/WebGL profile not completed. User requested stopping long local Chromium runs."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [
+        "Collect performance and WebGL evidence from the hosted release workflow/browser evidence."
+      ],
+      "confidence": "low",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 10,
+      "name": "integration",
+      "assignment": "Integrate reviewed feature changes atop canonical main",
+      "taskId": "EARTH-10",
+      "status": "IN_PROGRESS",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [],
+      "findings": [
+        "PR #13 fetched and integrated locally over current main; local static and key browser suites pass. Final local candidate must be committed, pushed and run through current-main CI."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [
+        "GitHub write credentials absent; no remote merge or candidate CI run."
+      ],
+      "confidence": "medium",
+      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+    },
+    {
+      "agent": 11,
+      "name": "release-deployment",
+      "assignment": "Verify CI SHA, immutable Vercel artifact and production alias SHA",
+      "taskId": "EARTH-11",
+      "status": "BLOCKED",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [],
+      "findings": [
+        "Deployment guard syntax and SHA gate reviewed locally; canonical /release.json currently returns 404 and no deployment ID/SHA is exposed.",
+        "No authenticated GitHub/Vercel path is available."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [
+        "Enable GitHub write/Actions permissions and configure VERCEL_TOKEN in repository Actions; then run the guarded deployment for the final main SHA."
+      ],
+      "confidence": "high",
+      "notes": "Blocked by remote authentication/deployment or missing final evidence; no completion claim."
+    },
+    {
+      "agent": 12,
+      "name": "independent-certifier",
+      "assignment": "Challenge release candidate and confirm all production gates",
+      "taskId": "EARTH-12",
+      "status": "BLOCKED",
+      "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
+      "branch": "codex/earth-final-integration",
+      "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
+      "commands": [],
+      "tests": [],
+      "findings": [
+        "Cannot independently certify exact candidate CI, immutable artifact, canonical production SHA or tracker write without remote credentials and a completed candidate deployment."
+      ],
+      "fixes": [],
+      "resultingCommit": null,
+      "blockers": [
+        "Certify after candidate Actions, immutable deploy, canonical browser/asset/SHA proof, and tracker reconciliation are available."
+      ],
+      "confidence": "high",
+      "notes": "Blocked by remote authentication/deployment or missing final evidence; no completion claim."
+    }
+  ],
+  "capabilities": [
+    {
+      "taskId": "CAP-01",
+      "capability": "Planet",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-02",
+      "capability": "Deep Time",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-03",
+      "capability": "Civilization",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-04",
+      "capability": "Orbit",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-05",
+      "capability": "Moon",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-06",
+      "capability": "Earthquakes",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-07",
+      "capability": "Oceans",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-08",
+      "capability": "Solar System",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-09",
+      "capability": "Systems",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-10",
+      "capability": "Regional Filters",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-11",
+      "capability": "City Drill-down",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-12",
+      "capability": "Story",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    },
+    {
+      "taskId": "CAP-13",
+      "capability": "Living World",
+      "status": "UNCLAIMED",
+      "productionVerified": false
+    }
+  ],
+  "release": {
+    "status": "BLOCKED_EXTERNAL_AND_VERIFICATION",
+    "shaEqualityProven": false
+  },
+  "blockers": [
+    {
+      "type": "external",
+      "owner": "GitHub/Vercel release operator",
+      "description": "No authenticated GitHub write/Actions or Vercel project credential is available to push the candidate, obtain exact-head CI, stage/promote an immutable artifact, and prove canonical SHA equality."
+    },
+    {
+      "type": "verification",
+      "owner": "release certifier",
+      "description": "Full browser/visual acceptance and exact candidate Actions/artifact/deployment evidence remain incomplete; the local browser pass was intentionally stopped before all suites finished."
+    },
+    {
+      "type": "external",
+      "owner": "tracker administrator",
+      "description": "Canonical tracker connection is unavailable, so RE-164/165/166 and World-Sim/RomanCivilizations reconciliation could be documented but not written to the external tracker."
+    }
+  ],
+  "currentLocalCandidateParent": "e314e8c015bb87a481985b195148c2585b0f10bf",
+  "qualityRunSHA": null,
+  "production": {
+    "canonicalURL": "https://earth-reference-rebuild.vercel.app",
+    "observedHTTPStatus": 200,
+    "releaseJsonHTTPStatus": 404,
+    "deploymentURL": null,
+    "deploymentID": null,
+    "deploymentSHA": null,
+    "canonicalSHA": null,
+    "shaEqualityProven": false,
+    "status": "BLOCKED_NO_CANDIDATE_DEPLOYMENT"
+  },
+  "tracker": {
+    "externalTrackerUpdated": false,
+    "status": "BLOCKED_EXTERNAL_TRACKER_ACCESS",
+    "note": "RE-164/165/166 reconciled in companion evidence; external tracker row writes are unavailable. No World-Sim ID invented."
+  },
+  "remoteMainSha": "e314e8c015bb87a481985b195148c2585b0f10bf",
+  "remoteLivingWorldPR": {
+    "number": 13,
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "mergeableState": "clean",
+    "headSha": "e95d6f9c435ae68e78118fe85d9281bf0522992b",
+    "baseSha": "e314e8c015bb87a481985b195148c2585b0f10bf"
+  },
+  "lastSuccessfulQualityRunOnMain": {
+    "runNumber": 114,
+    "runId": "35362128207",
+    "conclusion": "success",
+    "sha": "e314e8c015bb87a481985b195148c2585b0f10bf",
+    "updatedAt": "2026-09-18T15:41:55Z",
+    "url": "https://github.com/rrahul0904/earth-reference-rebuild/actions/runs/35362128207",
+    "certifiesCurrentCandidate": false
+  },
+  "localVerification": {
+    "cleanInstall": "PASS: npm ci --no-audit --no-fund",
+    "static": "PASS: npm test (smoke, Living World deterministic/replay/bounds/snapshot invariants, release metadata 3/3)",
+    "browser": [
+      {
+        "suite": "tests/quality.spec.mjs",
+        "passed": 9,
+        "failed": 0,
+        "status": "PASS"
+      },
+      {
+        "suite": "tests/security.spec.mjs",
+        "passed": 9,
+        "failed": 0,
+        "status": "PASS"
+      },
+      {
+        "suite": "tests/convergence.spec.mjs",
+        "passed": 8,
+        "failed": 0,
+        "status": "PASS"
+      },
+      {
+        "suite": "tests/browser.spec.mjs",
+        "passed": 4,
+        "failed": 0,
+        "notRun": 2,
+        "status": "STOPPED_AT_USER_DIRECTION"
+      },
+      {
+        "suite": "tests/productization.spec.mjs",
+        "passed": 0,
+        "failed": 0,
+        "notRun": 5,
+        "status": "NOT_RUN"
+      },
+      {
+        "suite": "tests/resilience.spec.mjs",
+        "passed": 0,
+        "failed": 0,
+        "notRun": 3,
+        "status": "NOT_RUN"
+      }
+    ],
+    "workflows": "PASS: YAML parse; rollback URL guard normalization examples; git diff --check",
+    "fullBrowserAcceptance": false,
+    "note": "Long local Chromium work stopped at user direction to focus on hosted release readiness."
+  },
+  "knownPR13QualityRun": {
+    "runNumber": 121,
+    "runId": "35677531139",
+    "event": "pull_request",
+    "conclusion": "success",
+    "sha": "e95d6f9c435ae68e78118fe85d9281bf0522992b",
+    "branch": "reverse/world-sim-living-world",
+    "url": "https://github.com/rrahul0904/earth-reference-rebuild/actions/runs/35677531139",
+    "artifact": {
+      "name": "earth-browser-evidence",
+      "id": "10673898956",
+      "expired": false,
+      "sizeBytes": 6004593,
+      "createdAt": "2026-09-22T02:15:09Z"
+    },
+    "certifiesCurrentCandidate": false
+  }
+}

@@ -15,6 +15,8 @@ const polish = fs.readFileSync(new URL('reference-polish.js', root),'utf8');
 const finalizer = fs.readFileSync(new URL('reference-finalizer.js', root),'utf8');
 const convergence = fs.readFileSync(new URL('earth-convergence.js', root),'utf8');
 const convergenceCss = fs.readFileSync(new URL('earth-convergence.css', root),'utf8');
+const livingWorldCore = fs.readFileSync(new URL('living-world-core.js', root),'utf8');
+const livingWorldBrowser = fs.readFileSync(new URL('living-world-browser.js', root),'utf8');
 const deployWorkflow = fs.readFileSync(new URL('.github/workflows/deploy-vercel.yml', root),'utf8');
 
 for (const id of ['globe','timeline','playButton','sourcesDialog','exploreMenu','mobileTimeline']) assert.ok(html.includes('id="' + id + '"'), 'missing ' + id);
@@ -50,10 +52,16 @@ for (const file of ['visual-fixes.js','moon-fidelity.js','reference-polish.js','
 }
 assert.ok(bridge.includes('/earth-convergence.js'), 'experience bridge must load convergence engine');
 assert.ok(bridge.includes('/earth-convergence.css'), 'experience bridge must load convergence styles');
+assert.ok(bridge.includes('/living-world-browser.js'), 'experience bridge must load Living World module');
 for (const capability of ['registerLayer','renderAt','selectMoonLandmark','setOrbit','setRegion','setSimulationTime','predictOrbit','ingestEvent','selectEvent','applyStoryCamera','cameraForGeo','focusGeo','boundedText','finiteNumber','drawHeatmap','drawClusters','drawUrbanInset','renderPlaceDetail','STORY_SCENES','orbitPeriodSeconds','gravityAt','convergenceSourcesTrigger']) {
   assert.ok(convergence.includes(capability), 'missing convergence capability ' + capability);
 }
 assert.ok(convergenceCss.includes('.convergence-drawer'), 'convergence explorer styling missing');
+for (const capability of ['createLivingWorld','tickLivingWorld','teachKnowledge','killPerson','runExperiment','snapshotLivingWorld','restoreLivingWorld','hashLivingWorld']) {
+  assert.ok(livingWorldCore.includes(capability), 'missing Living World capability ' + capability);
+}
+assert.ok(livingWorldBrowser.includes("registerLayer('living-world'"), 'Living World browser layer registration missing');
+assert.ok(livingWorldBrowser.includes("data.livingWorldReady") || livingWorldBrowser.includes("dataset.livingWorldReady"), 'Living World readiness marker missing');
 assert.ok(!convergence.includes("box.innerHTML='<strong>'+p.name"), 'event detail rendering must avoid HTML injection');
 assert.ok(deployWorkflow.includes('release.json'), 'production workflow must stamp the certified revision');
 assert.ok(deployWorkflow.includes('Verify canonical production URL and exact SHA'), 'production workflow must verify the canonical exact SHA');

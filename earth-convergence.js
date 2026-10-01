@@ -841,7 +841,7 @@
     }
 
     var dpr=Math.min(devicePixelRatio||1,2);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,innerWidth,innerHeight);
-    activeLayers.forEach(function(id){var layer=layerRegistry.get(id);if(layer&&layer.draw)layer.draw();});
+    activeLayers.forEach(function(id){var layer=layerRegistry.get(id);if(layer&&layer.draw)layer.draw({ctx:ctx,project:projection,dataTime:runtime.dataTime,experience:state.experience});});
     drawUrbanInset();drawOrbitSimulation();drawSelected();drawStoryParticles();
     requestAnimationFrame(frame);
   }

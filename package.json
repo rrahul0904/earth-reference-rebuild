@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/smoke.mjs",
+    "test": "node tests/smoke.mjs && node tests/living-world-core.mjs",
     "serve": "python3 -m http.server 4173",
     "test:e2e": "playwright test"
   },

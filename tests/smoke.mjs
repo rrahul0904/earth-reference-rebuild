@@ -68,8 +68,21 @@ assert.ok(deployWorkflow.includes('--prod --skip-domain'), 'production workflow 
 assert.ok(deployWorkflow.includes('vercel promote'), 'production workflow must promote only after immutable verification');
 assert.ok(deployWorkflow.includes('VERCEL_TOKEN is required for production deployment'), 'production deployment must remain fail-closed without authorization');
 assert.ok(deployWorkflow.includes('quality.yml'), 'production workflow must require current-main quality evidence');
+assert.ok(deployWorkflow.includes("run.event !== 'push'"), 'production workflow must reject non-push quality runs');
+assert.ok(deployWorkflow.includes('main or the exact successful quality run changed after candidate verification'), 'production workflow must recheck main and its quality run immediately before promotion');
+assert.ok(deployWorkflow.includes('https://api.vercel.com/v4/aliases/$CANONICAL_HOST'), 'rollback discovery must verify the canonical alias through the Vercel API');
+assert.ok(deployWorkflow.includes('https://api.vercel.com/v13/deployments/$previous_id'), 'rollback target must be inspected in the configured Vercel project');
+assert.ok(deployWorkflow.includes('Resolve staged candidate deployment identity'), 'candidate promotion must be tied to a Vercel deployment ID');
+assert.ok(deployWorkflow.includes('Production changed during candidate verification'), 'workflow must preserve concurrent production deployments');
+assert.ok(deployWorkflow.includes('Confirm production alias points to the promoted candidate'), 'workflow must confirm promotion selected the tested deployment');
+assert.ok(deployWorkflow.includes('Confirm main remained certified through production acceptance'), 'workflow must roll back if main advances during production acceptance');
+assert.ok(deployWorkflow.includes("steps.promotion.outputs.attempted == 'true'"), 'rollback must run even if promotion was attempted but the CLI failed');
+assert.ok(deployWorkflow.includes('always() && (failure() || cancelled())'), 'rollback cleanup must run after post-promotion cancellation as well as failure');
+assert.ok(deployWorkflow.includes('Production no longer points to this candidate'), 'rollback must preserve a concurrent production deployment');
+assert.ok(deployWorkflow.includes('served app shell were confirmed on the recorded prior deployment'), 'rollback must verify canonical content matches the prior immutable deployment');
+assert.ok(deployWorkflow.includes('[ "$previous_status" = "200" ]') && deployWorkflow.includes('[ -s /tmp/canonical-after-rollback.html ]'), 'rollback must require successful non-empty responses from both production and immutable prior URLs');
 assert.ok(deployWorkflow.includes('Run browser acceptance against immutable deployment'), 'immutable candidate must receive real browser acceptance before promotion');
-assert.ok(deployWorkflow.includes('Roll production alias back after failed browser acceptance'), 'production browser failures must restore the prior alias when available');
+assert.ok(deployWorkflow.includes('Roll production alias back after failed production verification'), 'production verification failures must restore the prior alias when available');
 assert.doesNotThrow(() => new Function(convergence), 'convergence engine must parse as classic browser JavaScript');
 for (const excluded of ['Buy land','Leaderboard','Fuel economy']) assert.ok(!convergence.includes(excluded), 'excluded product mechanic leaked into convergence engine: ' + excluded);
 

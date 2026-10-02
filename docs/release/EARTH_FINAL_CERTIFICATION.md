@@ -1,6 +1,6 @@
 # Earth final integration and certification
 
-**Audit date:** 2026-10-01 (America/New_York)
+**Audit date:** 2026-10-02 (America/New_York)
 **Repository:** `rrahul0904/earth-reference-rebuild`
 **Canonical hostname:** <https://earth-reference-rebuild.vercel.app>
 **Status:** IN PROGRESS; production certification is not established.
@@ -9,9 +9,9 @@ This record separates observed state from work that remains unverified. The mach
 
 ## Repository and remote state
 
-The latest read-only remote check confirms `main` is still `e314e8c015bb87a481985b195148c2585b0f10bf`. PR #13 remains draft, open, unmerged and mergeable-clean, with head `e95d6f9c435ae68e78118fe85d9281bf0522992b`, base `e314e8c015bb87a481985b195148c2585b0f10bf`, 10 commits and 9 files. Its supplied quality run #121 / `35677531139` is verified as successful on that exact PR head and its unexpired `earth-browser-evidence` artifact is present (6,004,593 bytes). The latest successful quality workflow on main is run #114 / `35362128207`, conclusion `success`, on the same main SHA (2026-09-18). Those earlier runs do not certify the current integration candidate.
+The latest read-only remote check confirms `main` is still `e314e8c015bb87a481985b195148c2585b0f10bf`. PR #13 remains open, draft, unmerged and mergeable-clean, with head `e95d6f9c435ae68e78118fe85d9281bf0522992b`. Its prior quality run #121 / `35677531139` passed on that exact head. The latest successful quality workflow on main remains run #114 / `35362128207` on the main SHA; neither historical run certifies the current integration candidate.
 
-The integration candidate is pushed on `codex/earth-final-integration` at `67932498a531a1436b5c8050f7586496b271874e`; draft PR [#16](https://github.com/rrahul0904/earth-reference-rebuild/pull/16) is open against `main`. PR #13 remains open and unmerged. GitHub Actions quality run [#124](https://github.com/rrahul0904/earth-reference-rebuild/actions/runs/36910230254) passed on that exact SHA. The canonical page returns HTTP 200, while `/release.json` returns HTTP 404. No candidate deployment ID, Preview URL, or production source SHA is observable.
+The integration candidate is pushed on `codex/earth-final-integration` at `6e01a26a858562c9d02ab4efbe507339ef829c27`; draft PR [#16](https://github.com/rrahul0904/earth-reference-rebuild/pull/16) is open against `main`. Its exact-head quality run [#127](https://github.com/rrahul0904/earth-reference-rebuild/actions/runs/37016618421) passed, including 40/40 hosted Chromium Playwright tests. Artifact `earth-browser-evidence` (ID `11231583639`, 6,043,337 bytes) was uploaded. Run #126 passed 38/40 tests but exposed an Oceans screenshot timeout and a city-centering assertion by 0.18 pixels; both focused tests passed locally after a CI timeout allowance and a 4-pixel centering tolerance, then run #127 passed. The preceding candidate `e23081f67b98b512f06a3d9e55ebdeca2be4f369` also passed run #125. The canonical page previously returned HTTP 200, while `/release.json` returned HTTP 404. No candidate deployment ID, Preview URL, or production source SHA is observable.
 
 ## Work and checks
 
@@ -22,17 +22,17 @@ The locally integrated Living World changes add option/tick/event bounds, househ
 Verification performed after a clean `npm ci --no-audit --no-fund`:
 
 - `npm test` passes: static smoke, deterministic Living World replay/bounds/snapshot invariants, and release metadata tests (3/3).
-- `tests/quality.spec.mjs` passes 9/9; `tests/security.spec.mjs` passes 9/9; `tests/convergence.spec.mjs` passes 8/8. Three separately targeted browser regressions also passed.
-- The hosted GitHub Actions quality workflow ran the complete browser acceptance on the exact candidate SHA: 40/40 Playwright tests passed. It uploaded `earth-browser-evidence` (artifact ID `11188567076`, 6,044,730 bytes). This verifies automated acceptance; an independent human visual/accessibility review of the screenshots remains outstanding.
-- Workflow YAML, the Vercel rollback URL guard, and `git diff --check` pass local validation. No deployment or production mutation was attempted.
+- Focused local retests of the Oceans capture and city centering checks pass. The current hosted quality run completed the full 40-test Playwright suite successfully on the exact candidate SHA.
+- Run #127 uploaded `earth-browser-evidence` (artifact ID `11231583639`, 6,043,337 bytes). This verifies automated acceptance; an independent human visual/accessibility review of hosted screenshots remains outstanding.
+- Workflow YAML, all workflow shell blocks, the static smoke/core/release-metadata suites, and `git diff --check` pass local validation. No deployment or production mutation was attempted.
 
-The repository's `quality` action runs `npm test` and the full Playwright suite on pushes to `main` and pull requests. The release action repeats browser acceptance before promotion and against the canonical alias afterward. The exact candidate SHA has run successfully in GitHub Actions (quality run #124 / `36910230254`).
+The repository's `quality` action runs `npm test` and the full Playwright suite on pushes to `main` and pull requests. The release action repeats browser acceptance before promotion and against the canonical alias afterward. Exact candidate SHA `6e01a26a858562c9d02ab4efbe507339ef829c27` passed GitHub Actions quality run #127 / `37016618421`.
 
 ## Release gates
 
-The Vercel workflow requires a successful quality run for the current `main` SHA, fails closed if no safe previous Vercel deployment can be captured for rollback, stamps the exact candidate SHA, verifies the immutable candidate marker/assets, runs browser acceptance before promotion, then checks the canonical alias and conditionally rolls back after a post-promotion failure. YAML parsing and the rollback URL normalization guard pass locally. The quality workflow passed on the candidate; the deployment workflow has not been run.
+The Vercel workflow requires a successful push-triggered quality run for the current `main` SHA, fails closed if no safe previous Vercel deployment can be captured for rollback, stamps the exact candidate SHA, verifies immutable candidate metadata and assets, runs browser acceptance before promotion, reconfirms `main`, its exact quality run, and the prior alias in the promotion step, then checks the canonical alias and conditionally verifies rollback after a post-promotion failure. Promotion and alias checks are separate operations; Vercel exposes no atomic compare-and-swap guard here, so an external promotion can still race the check. Local YAML parsing, workflow shell syntax parsing, smoke tests, deterministic kernel checks, release metadata tests, focused Playwright retests, and `git diff --check` pass. Exact-head run #127 passed; the production deployment workflow has not been run.
 
-No immutable Vercel candidate, deployment ID, production promotion, fresh production browser run, rollback test, or exact SHA equality proof exists. The release is not ready. GitHub repository secret and variable listings are empty, and the deployments API returned no records. Vercel CLI access is unavailable and the dashboard redirected to sign-in; no credentials were entered. The workflow contains existing org/project IDs, but they could not be verified against the Vercel account. The release operator needs authenticated access to that existing Vercel project, must verify its GitHub repository/branch settings, and configure `VERCEL_TOKEN` before staging a Preview. Keep promotion gated on a separate release decision. Tracker reconciliation also requires the canonical tracker connection. Do not paste credentials into chat.
+**Status: `BLOCKED_EXTERNAL: VERCEL_DEPLOY_AUTHORIZATION`.** The user supplied the verified existing Vercel team/project IDs (`team_zmEezpOKGZy2sH5nqTfO44LD` / `prj_UL4T4q0fiT7KdEKoBLai6i44E4YS`). No repository `VERCEL_TOKEN` secret is configured, no authenticated Vercel CLI/dashboard session or deployment history is available, and no PR-head Preview URL has been observed. The release operator must authorize Vercel deployment access to this existing project, preferably through the repository secret or an authenticated Vercel-native integration. Then stage and independently verify the exact Preview before considering merge. No production mutation has been attempted. Tracker reconciliation also requires the canonical tracker connection. Do not paste credentials into chat.
 
 ## Capability review
 

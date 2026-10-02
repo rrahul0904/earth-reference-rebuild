@@ -1,35 +1,41 @@
 {
   "schemaVersion": 1,
-  "observedOn": "2026-10-01",
+  "observedOn": "2026-10-02",
   "repository": "rrahul0904/earth-reference-rebuild",
   "canonicalUrl": "https://earth-reference-rebuild.vercel.app",
   "startingMainSha": "e314e8c015bb87a481985b195148c2585b0f10bf",
   "livingWorldHead": "e95d6f9c435ae68e78118fe85d9281bf0522992b",
-  "overallStatus": "IN_PROGRESS",
+  "overallStatus": "BLOCKED_EXTERNAL: VERCEL_DEPLOY_AUTHORIZATION",
   "agents": [
     {
       "agent": 0,
       "name": "orchestrator",
       "assignment": "Inspect canonical repo/PR/CI/release/tracker state; lead integration",
       "taskId": "EARTH-00",
-      "status": "IN_PROGRESS",
+      "status": "BLOCKED_EXTERNAL",
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
+      "commands": [
+
+      ],
       "tests": [
         "GitHub Actions quality run #124: success on exact candidate SHA 67932498a531a1436b5c8050f7586496b271874e",
         "npm test: pass",
         "Hosted Playwright acceptance: 40/40 pass; earth-browser-evidence artifact uploaded",
-        "Local targeted quality/security/convergence suites: 9/9, 9/9, 8/8"
+        "Local targeted quality/security/convergence suites: 9/9, 9/9, 8/8",
+        "Quality run #127: exact candidate SHA passed 40/40 Playwright; artifact 11231583639"
       ],
       "findings": [
         "Candidate branch codex/earth-final-integration is pushed and draft PR #16 is open against main; PR #13 remains open, draft, unmerged and clean.",
         "GitHub Actions quality run #124 / 36910230254 completed successfully on exact candidate SHA 67932498a531a1436b5c8050f7586496b271874e; all 40 Playwright tests passed and artifact 11188567076 (6,044,730 bytes) uploaded.",
         "Canonical page returns HTTP 200, /release.json returns 404, and no production SHA or candidate deployment is proven.",
-        "Repository Actions secret and variable listings are empty; GitHub deployments API returned no deployment records. Vercel project dashboard access was not established."
+        "Repository Actions secret and variable listings are empty; GitHub deployments API returned no deployment records. Vercel project dashboard access was not established.",
+        "Vercel deployment authorization and PR-head Preview remain unavailable; no merge or production mutation attempted."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
       "blockers": [
         "Vercel access is not established: no VERCEL_TOKEN repository secret, no deployment records or candidate Preview URL observed, and dashboard access redirects to sign-in. Verify the existing team/project and Git integration through an authenticated Vercel session, then configure the required token before staging.",
@@ -37,7 +43,7 @@
         "Canonical tracker connection is unavailable, so RE-164/165/166 and World-Sim/RomanCivilizations reconciliation could be documented but not written to the external tracker."
       ],
       "confidence": "medium",
-      "notes": "Exact-head hosted CI is complete; Vercel deployment access, independent visual review, production proof, and external tracker updates remain unverified."
+      "notes": "Implementation, release workflow audit and exact-head hosted quality are complete; remaining release phases require Vercel authorization."
     },
     {
       "agent": 1,
@@ -48,7 +54,9 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
+      "commands": [
+
+      ],
       "tests": [
         "tests/quality.spec.mjs: 9/9",
         "tests/browser.spec.mjs: 4/6"
@@ -56,9 +64,13 @@
       "findings": [
         "Existing core and responsive acceptance tests: 4/6 passed before browser work was stopped; 2 were not run. Deep-time/history and Story reduced-motion tests passed in the quality suite."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
-      "blockers": [],
+      "blockers": [
+
+      ],
       "confidence": "medium",
       "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
     },
@@ -71,7 +83,9 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-living-world",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth-living-world",
-      "commands": [],
+      "commands": [
+
+      ],
       "tests": [
         "npm test Living World deterministic and bounds checks: pass",
         "tests/convergence.spec.mjs Living World layer coverage included: 8/8"
@@ -80,9 +94,13 @@
         "Integrated Living World bounds, household consistency, snapshot graph validation and cache changes passed deterministic/replay/restore/bounds tests; the opt-in layer passed convergence browser acceptance.",
         "PR #13 remains open and draft remotely; no merge or exact-head CI evidence exists."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
-      "blockers": [],
+      "blockers": [
+
+      ],
       "confidence": "medium",
       "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
     },
@@ -95,7 +113,9 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
+      "commands": [
+
+      ],
       "tests": [
         "tests/convergence.spec.mjs: 8/8",
         "tests/quality.spec.mjs: 9/9"
@@ -103,9 +123,13 @@
       "findings": [
         "Current convergence suite verifies orbit predictions/presets, geospatial layers, filters, regional place listing, lunar landmark, city drill-down and neighborhood keyboard focus."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
-      "blockers": [],
+      "blockers": [
+
+      ],
       "confidence": "medium",
       "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
     },
@@ -118,7 +142,9 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
+      "commands": [
+
+      ],
       "tests": [
         "tests/quality.spec.mjs: Story coverage passed within 9/9",
         "tests/convergence.spec.mjs: timeline coverage passed within 8/8"
@@ -126,9 +152,13 @@
       "findings": [
         "Story deterministic timeline, interruption/navigation, reduced-motion scenes and Pause behavior including mobile passed local browser coverage."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
-      "blockers": [],
+      "blockers": [
+
+      ],
       "confidence": "medium",
       "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
     },
@@ -141,21 +171,28 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-quality",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth-quality",
-      "commands": [],
+      "commands": [
+
+      ],
       "tests": [
         "GitHub Actions quality run #124 / 36910230254: success on exact candidate SHA 67932498a531a1436b5c8050f7586496b271874e",
         "npm test: pass",
         "Hosted Playwright: 40/40 pass",
-        "earth-browser-evidence artifact 11188567076 uploaded"
+        "earth-browser-evidence artifact 11188567076 uploaded",
+        "GitHub Actions quality run #127 / 37016618421: success on exact candidate SHA 6e01a26a858562c9d02ab4efbe507339ef829c27; Playwright 40/40; artifact 11231583639"
       ],
       "findings": [
         "Full quality workflow completed successfully for PR #16 exact head; this certifies candidate CI, not production deployment."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
-      "blockers": [],
+      "blockers": [
+
+      ],
       "confidence": "medium",
-      "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
+      "notes": "Exact PR candidate automated quality complete; not evidence of a Vercel Preview or production deployment."
     },
     {
       "agent": 6,
@@ -166,7 +203,9 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-security",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth-security",
-      "commands": [],
+      "commands": [
+
+      ],
       "tests": [
         "tests/security.spec.mjs: 9/9",
         "npm test: pass"
@@ -174,9 +213,13 @@
       "findings": [
         "Malformed preference, URL/state, unsafe event text/coordinates, duplicate ID and retention adversarial checks pass locally. Deployment workflow refuses to proceed without a safely resolved rollback target and requires current-main quality SHA."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
-      "blockers": [],
+      "blockers": [
+
+      ],
       "confidence": "medium",
       "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
     },
@@ -189,12 +232,18 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
-      "tests": [],
+      "commands": [
+
+      ],
+      "tests": [
+
+      ],
       "findings": [
         "Browser screenshot artifacts exist from passing test runs, but the requested full independent visual/accessibility matrix was not completed."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
       "blockers": [
         "Finish browser screenshot review when authenticated hosted candidate artifacts are available; verify mobile, systems, moon, Living World and key scenes."
@@ -211,12 +260,18 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
-      "tests": [],
+      "commands": [
+
+      ],
+      "tests": [
+
+      ],
       "findings": [
         "Repository history and donor/tracker classification recorded in TRACKER_RECONCILIATION.md; no canonical World-Sim ID invented; no verified STEMKit requirement found."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
       "blockers": [
         "Canonical tracker credentials/connector are unavailable; RE-164/165/166 and superseded Roman mapping were not edited externally."
@@ -233,12 +288,18 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
-      "tests": [],
+      "commands": [
+
+      ],
+      "tests": [
+
+      ],
       "findings": [
         "Orbital prediction now caches by altitude and public inputs are bounded; full mobile/frame-time/memory/WebGL profile not completed. User requested stopping long local Chromium runs."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
       "blockers": [
         "Collect performance and WebGL evidence from the hosted release workflow/browser evidence."
@@ -255,14 +316,22 @@
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
-      "tests": [],
+      "commands": [
+
+      ],
+      "tests": [
+
+      ],
       "findings": [
         "PR #13 candidate and integration hardening are committed and pushed as PR #16 over main e314e8c; exact-head hosted quality CI passed 40/40."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
-      "blockers": [],
+      "blockers": [
+
+      ],
       "confidence": "medium",
       "notes": "Status reflects independently recorded local evidence; hosted release completion is not claimed."
     },
@@ -271,20 +340,26 @@
       "name": "release-deployment",
       "assignment": "Verify CI SHA, immutable Vercel artifact and production alias SHA",
       "taskId": "EARTH-11",
-      "status": "BLOCKED",
+      "status": "BLOCKED_EXTERNAL",
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
-      "tests": [],
+      "commands": [
+
+      ],
+      "tests": [
+
+      ],
       "findings": [
         "Deployment guard syntax and SHA gate reviewed locally; canonical /release.json returns 404 and no deployment ID/SHA is exposed.",
         "Repository has no VERCEL_TOKEN secret; deployments API has no candidate record and Vercel dashboard access was not established. Existing IDs in workflow were not independently verified in the Vercel account."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
       "blockers": [
-        "Obtain authenticated access to the existing Vercel project/team, verify repository and deployment settings, configure VERCEL_TOKEN, then stage the exact candidate Preview. Do not promote before explicit release authorization."
+        "Authorize Vercel deployment access to the user-verified existing team/project and provide a PR-head Preview URL; no credential is currently configured or authenticated."
       ],
       "confidence": "high",
       "notes": "Blocked by remote authentication/deployment or missing final evidence; no completion claim."
@@ -294,19 +369,25 @@
       "name": "independent-certifier",
       "assignment": "Challenge release candidate and confirm all production gates",
       "taskId": "EARTH-12",
-      "status": "BLOCKED",
+      "status": "BLOCKED_EXTERNAL",
       "startingSHA": "e314e8c015bb87a481985b195148c2585b0f10bf",
       "branch": "codex/earth-final-integration",
       "worktree": "/Users/rahulsingh/Documents/ChatGPT/Earth Project",
-      "commands": [],
-      "tests": [],
+      "commands": [
+
+      ],
+      "tests": [
+
+      ],
       "findings": [
         "Exact candidate Actions CI is successful with 40/40 browser tests and a retained evidence artifact; immutable Vercel deployment, canonical production SHA, independent visual review, and tracker write remain unavailable."
       ],
-      "fixes": [],
+      "fixes": [
+
+      ],
       "resultingCommit": null,
       "blockers": [
-        "Certify after Vercel Preview and production evidence, independent visual/accessibility review, and tracker reconciliation are available."
+        "Exact candidate CI passed, but no Vercel Preview/deployment authorization exists, so exact candidate-to-production equality cannot be proven."
       ],
       "confidence": "high",
       "notes": "Blocked by remote authentication/deployment or missing final evidence; no completion claim."
@@ -393,14 +474,14 @@
     }
   ],
   "release": {
-    "status": "BLOCKED_VERCEL_ACCESS_AND_PRODUCTION_VERIFICATION",
+    "status": "BLOCKED_EXTERNAL: VERCEL_DEPLOY_AUTHORIZATION",
     "shaEqualityProven": false
   },
   "blockers": [
     {
       "type": "external",
       "owner": "Vercel project administrator",
-      "description": "Vercel project access is unverified, repository Actions has no VERCEL_TOKEN secret, and no candidate Preview/deployment record is visible through GitHub. Verify the existing project/team and GitHub integration, provide authenticated Vercel access, and configure the token before staging."
+      "description": "The user supplied verified identity for existing Vercel team team_zmEezpOKGZy2sH5nqTfO44LD and project prj_UL4T4q0fiT7KdEKoBLai6i44E4YS. No repository VERCEL_TOKEN secret or authenticated Vercel deployment session is available, and no PR-head Preview URL/deployment is observable. Authorize Vercel deployment access to this existing project, then independently verify the exact Preview before considering merge."
     },
     {
       "type": "verification",
@@ -414,7 +495,7 @@
     }
   ],
   "currentLocalCandidateParent": "e314e8c015bb87a481985b195148c2585b0f10bf",
-  "qualityRunSHA": "67932498a531a1436b5c8050f7586496b271874e",
+  "qualityRunSHA": "6e01a26a858562c9d02ab4efbe507339ef829c27",
   "production": {
     "canonicalURL": "https://earth-reference-rebuild.vercel.app",
     "observedHTTPStatus": 200,
@@ -424,7 +505,7 @@
     "deploymentSHA": null,
     "canonicalSHA": null,
     "shaEqualityProven": false,
-    "status": "BLOCKED_NO_CANDIDATE_DEPLOYMENT"
+    "status": "BLOCKED_NO_VERCEL_AUTHORIZATION_OR_CANDIDATE_PREVIEW"
   },
   "tracker": {
     "externalTrackerUpdated": false,
@@ -499,12 +580,28 @@
     "fullBrowserAcceptance": true,
     "note": "Hosted GitHub Actions completed all browser acceptance tests on the exact candidate SHA. Independent visual review and Vercel release evidence remain outstanding.",
     "hostedCandidateAcceptance": {
-      "sha": "67932498a531a1436b5c8050f7586496b271874e",
-      "runId": "36910230254",
+      "sha": "6e01a26a858562c9d02ab4efbe507339ef829c27",
+      "runId": "37016618421",
+      "runNumber": 127,
       "conclusion": "PASS",
       "testCount": 40,
-      "artifactId": "11188567076",
-      "artifactSizeBytes": 6044730
+      "artifactId": "11231583639",
+      "artifactSizeBytes": 6043337,
+      "artifactDigest": "sha256:8d9ddcdd141079e3cfbfbc07cadb955a4d5edb107805a3f28cd8af8b3c4f55e3"
+    },
+    "focusedRetests": "PASS: Oceans browser acceptance and city selection tests",
+    "visualReview": {
+      "sourceArtifactId": "11231583639",
+      "surfacesReviewed": [
+        "desktop Earth",
+        "orbit",
+        "Moon",
+        "oceans",
+        "Earth systems",
+        "Living World",
+        "mobile ocean"
+      ],
+      "result": "No obvious layout regressions in reviewed automated screenshots; this is PR-code evidence, not a hosted Vercel Preview review."
     }
   },
   "knownPR13QualityRun": {
@@ -526,31 +623,28 @@
   },
   "githubCandidate": {
     "branch": "codex/earth-final-integration",
-    "sha": "67932498a531a1436b5c8050f7586496b271874e",
+    "sha": "6e01a26a858562c9d02ab4efbe507339ef829c27",
     "pullRequest": {
       "number": 16,
       "state": "open",
       "draft": true,
-      "base": "main",
       "url": "https://github.com/rrahul0904/earth-reference-rebuild/pull/16"
     },
     "qualityRun": {
-      "runNumber": 124,
-      "runId": "36910230254",
+      "runNumber": 127,
+      "runId": "37016618421",
       "conclusion": "success",
-      "sha": "67932498a531a1436b5c8050f7586496b271874e",
-      "url": "https://github.com/rrahul0904/earth-reference-rebuild/actions/runs/36910230254",
+      "sha": "6e01a26a858562c9d02ab4efbe507339ef829c27",
+      "url": "https://github.com/rrahul0904/earth-reference-rebuild/actions/runs/37016618421",
       "browserTests": "40 passed",
       "artifact": {
         "name": "earth-browser-evidence",
-        "id": "11188567076",
+        "id": "11231583639",
         "expired": false,
-        "sizeBytes": 6044730
+        "sizeBytes": 6043337,
+        "sha256": "8d9ddcdd141079e3cfbfbc07cadb955a4d5edb107805a3f28cd8af8b3c4f55e3"
       }
-    },
-    "repositoryActionsSecretsObserved": [],
-    "repositoryActionsVariablesObserved": [],
-    "githubDeploymentRecordsObserved": 0
+    }
   },
   "vercelAccess": {
     "cliAvailable": false,
@@ -562,14 +656,43 @@
     "workflowIdsAccountVerified": false,
     "candidatePreviewUrl": null,
     "candidateDeploymentObserved": false,
-    "githubDeploymentRecordsObserved": 0
+    "githubDeploymentRecordsObserved": 0,
+    "identitySource": "User supplied as verified for the existing project",
+    "authenticatedDeploymentAccess": "unavailable"
   },
-  "candidateSHA": "67932498a531a1436b5c8050f7586496b271874e",
+  "candidateSHA": "6e01a26a858562c9d02ab4efbe507339ef829c27",
   "candidateBranch": "codex/earth-final-integration",
   "candidatePullRequest": {
     "number": 16,
     "state": "open",
     "draft": true,
     "url": "https://github.com/rrahul0904/earth-reference-rebuild/pull/16"
+  },
+  "workflowSafetyReview": {
+    "result": "PASS_WITH_DOCUMENTED_EXTERNAL_RACE_LIMITATION",
+    "commit": "1b3ceecb39ba061052cec2449410a7df920d10b2",
+    "findings": [
+      "Require push-triggered quality evidence for production release",
+      "Resolve and validate prior canonical production deployment identity through Vercel API",
+      "Resolve staged candidate deployment ID and validate project/readiness",
+      "Recheck main SHA, exact successful quality run, and existing alias in the promotion step",
+      "Confirm promoted alias ID and guard rollback against a changed alias",
+      "Verify rollback target ID and matching non-empty canonical/immutable app-shell responses",
+      "External Vercel promotion can race the check because alias compare and promote are separate operations"
+    ],
+    "candidateCodeSHA": "6e01a26a858562c9d02ab4efbe507339ef829c27",
+    "qualityRunId": "37016618421"
+  },
+  "failedQualityRun": {
+    "runNumber": 126,
+    "runId": "37011887667",
+    "sha": "1b3ceecb39ba061052cec2449410a7df920d10b2",
+    "conclusion": "failure",
+    "passedBrowserTests": 38,
+    "failedBrowserTests": [
+      "Oceans screenshot timed out after four minutes on hosted SwiftShader",
+      "City centering measured 3.182 pixels against 3 pixel threshold"
+    ],
+    "localRetestAfterAdjustment": "Both focused tests passed locally; exact-head quality run #127 subsequently passed all 40 browser tests."
   }
 }

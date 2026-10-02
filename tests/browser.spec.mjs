@@ -129,6 +129,8 @@ test('desktop earthquake mode uses photographic night Earth and selected-event e
 });
 
 test('desktop Oceans uses dark reference lighting and organic flow filaments', async ({ page }) => {
+  // SwiftShader can take longer to capture the two live-globe evidence frames on a loaded CI runner.
+  test.setTimeout(360_000);
   const errors = await desktopReady(page);
   await switchExperience(page,'oceans');
   await expect(page.locator('#storyTitle')).toHaveText('An ocean. Always moving.');

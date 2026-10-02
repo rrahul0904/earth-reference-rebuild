@@ -17,14 +17,16 @@
     drawerOpen:false,
     tab:'layers',
     selectedPlace:null,
+    selectedNeighborhood:null,
     search:'',
     dataTime:1,
     dataPlaying:false,
     region:'global',
     hoverPlace:null,
     events:[],
+    eventSequence:0,
     last:performance.now(),
-    sim:{ enabled:false, altitudeKm:420, inclinationDeg:51.6, elapsed:0, playing:true, speed:1, track:false },
+    sim:{ enabled:false, altitudeKm:420, inclinationDeg:51.6, elapsed:0, playing:true, speed:1, track:false, prediction:null },
     story:{ playing:false, time:0, speed:1, scene:-1, lastScene:-1 },
     pointer:null
   };
@@ -327,18 +329,32 @@
     input=input||{};
     var lat=Number(input.lat),lon=Number(input.lon);
     if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180)throw new Error('Event requires valid lat/lon');
+    var hasId=input.id!==undefined&&input.id!==null&&String(input.id).trim()!=='';
+    var id=hasId?boundedText(input.id,'',96):'';
+    if(!hasId){do{id='event-'+(++runtime.eventSequence);}while(runtime.events.some(function(event){return event.id===id;}));}
+    if(runtime.events.some(function(event){return event.id===id;}))throw new Error('Event id already exists');
     var event={
-      id:boundedText(input.id,'event-'+(runtime.events.length+1),96),
+      id:id,
       name:boundedText(input.name||input.label,'Event',180),
       region:boundedText(input.region,'',96),
       lat:lat,lon:lon,
       time:finiteNumber(input.time,runtime.dataTime,0,1),
       weight:finiteNumber(input.weight,1,.25,4),
-      phase:seeded(stringSeed(boundedText(input.id||input.label,runtime.events.length,96)))*Math.PI*2,
+      phase:seeded(stringSeed(boundedText(input.id||input.label,runtime.events.length,96)))()*Math.PI*2,
       type:'event'
     };
     runtime.events.push(event);if(runtime.events.length>500)runtime.events.splice(0,runtime.events.length-500);
+    clearStaleEventSelection();
     updateMetrics();return Object.assign({},event);
+  }
+
+  function clearStaleEventSelection(){
+    if(runtime.hoverPlace && runtime.hoverPlace.type==='event' && runtime.events.indexOf(runtime.hoverPlace)<0)runtime.hoverPlace=null;
+    if(runtime.selectedPlace && runtime.selectedPlace.type==='event' && runtime.events.indexOf(runtime.selectedPlace)<0){
+      runtime.selectedPlace=null;
+      delete document.getElementById('app').dataset.convergenceSelected;
+      renderPlaceDetail();
+    }
   }
 
   function drawOcean(){
@@ -410,7 +426,7 @@
   }
 
   function predictOrbit(altitudeKm,samples){
-    samples=Math.max(24,Math.min(720,Math.round(samples||180)));
+    samples=Math.round(finiteNumber(samples,180,24,720));
     var radius=EARTH_RADIUS_KM+finiteNumber(altitudeKm,420,160,1000000);
     var period=orbitPeriodSeconds(radius-EARTH_RADIUS_KM),dt=period/samples;
     var x=radius,y=0,vx=0,vy=Math.sqrt(MU_KM3_S2/radius),points=[{x:x,y:y,t:0}];
@@ -430,7 +446,9 @@
     var normalized=Math.min(1.8,.23+alt/42000);
     var rx=L.radius*(1.18+normalized*.55),ry=rx*(.17+.22*Math.cos(runtime.sim.inclinationDeg*Math.PI/180));
     var tilt=-.22+runtime.sim.inclinationDeg/180*.55;
-    var prediction=predictOrbit(alt,180),radius=prediction.radiusKm;
+    var prediction=runtime.sim.prediction;
+    if(!prediction || prediction.altitudeKm!==alt){prediction=predictOrbit(alt,180);prediction.altitudeKm=alt;runtime.sim.prediction=prediction;}
+    var radius=prediction.radiusKm;
     ctx.save();ctx.translate(L.cx,L.cy);ctx.rotate(tilt);
     ctx.beginPath();
     prediction.points.forEach(function(point,i){
@@ -445,6 +463,7 @@
   }
 
   function drawStoryParticles(){
+    if(state.reduced)return;
     if(!runtime.story.playing && runtime.story.time===0)return;
     var scene=sceneAt(runtime.story.time),local=scene?((runtime.story.time-scene.at)/scene.duration):0;
     var edge=Math.min(local,1-local);
@@ -475,7 +494,7 @@
   function applyStoryCamera(t){
     var idx=sceneIndexAt(t),scene=STORY_SCENES[idx],next=STORY_SCENES[Math.min(idx+1,STORY_SCENES.length-1)];
     if(!scene.camera||typeof state==='undefined')return;
-    var u=Math.max(0,Math.min(1,(t-scene.at)/Math.max(.001,scene.duration))),e=u*u*(3-2*u);
+    var u=state.reduced?0:Math.max(0,Math.min(1,(t-scene.at)/Math.max(.001,scene.duration))),e=u*u*(3-2*u);
     var a=scene.camera,b=next.camera||a;
     state.yaw=lerpAngle(a.yaw,b.yaw,e);state.pitch=lerp(a.pitch,b.pitch,e);state.targetZoom=lerp(a.zoom,b.zoom,e);
   }
@@ -500,14 +519,13 @@
       var selected=MOON_LANDMARKS.find(function(x){return x.id===scene.place;});
       if(selected)selectPlace(Object.assign({type:'moon'},selected),false);
     }
-    setTimeout(function(){
-      if(scene.age!==undefined && typeof setAge==='function')setAge(scene.age);
-      if(scene.control)clickControl(scene.control);
-      refreshStoryUI();
-    },0);
+    if(scene.age!==undefined && typeof setAge==='function')setAge(scene.age);
+    if(scene.control)clickControl(scene.control);
+    refreshStoryUI();
   }
 
   function renderAt(seconds){
+    runtime.story.playing=false;
     runtime.story.time=Math.max(0,Math.min(STORY_DURATION,Number(seconds)||0));
     var idx=sceneIndexAt(runtime.story.time);
     runtime.story.lastScene=idx;applyStoryScene(idx);applyStoryCamera(runtime.story.time);
@@ -524,6 +542,7 @@
       region:runtime.region,
       eventCount:runtime.events.length,
       selectedPlace:runtime.selectedPlace?runtime.selectedPlace.id:null,
+      selectedNeighborhood:runtime.selectedNeighborhood,
       camera:{yaw:Number(state.yaw.toFixed(5)),pitch:Number(state.pitch.toFixed(5)),targetZoom:Number(state.targetZoom.toFixed(5))},
       orbit:{enabled:runtime.sim.enabled,altitudeKm:runtime.sim.altitudeKm,inclinationDeg:runtime.sim.inclinationDeg,periodSeconds:Number(orbitPeriodSeconds(runtime.sim.altitudeKm).toFixed(3))},
       story:{time:Number(runtime.story.time.toFixed(3)),scene:runtime.story.scene,playing:runtime.story.playing}
@@ -532,10 +551,11 @@
 
   function selectPlace(place,announce){
     runtime.selectedPlace=place;
+    runtime.selectedNeighborhood=null;
     document.getElementById('app').dataset.convergenceSelected=place.id;
     if(place.type==='moon'){
       clickExperience('moon');
-      setTimeout(function(){if(place.control)clickControl(place.control);},0);
+      if(place.control)clickControl(place.control);
     }else{
       if(state.experience!=='planet' && state.experience!=='civilization')clickExperience('civilization');
       if(typeof state.yaw==='number')focusGeo(place.lat||0,place.lon||0,1.34);
@@ -549,7 +569,7 @@
     if(state.experience==='moon'){
       MOON_LANDMARKS.forEach(function(p){var q=moonPosition(p);if(q.visible)candidates.push({place:Object.assign({type:'moon'},p),p:q});});
     }else if(activeLayers.has('cities') || state.experience==='civilization'){
-      CITIES.forEach(function(p){var q=projection(p.lat,p.lon);if(q)candidates.push({place:Object.assign({type:'city'},p),p:q});});
+      CITIES.filter(visibleFeature).forEach(function(p){var q=projection(p.lat,p.lon);if(q)candidates.push({place:Object.assign({type:'city'},p),p:q});});
       if(activeLayers.has('events'))runtime.events.filter(visibleFeature).forEach(function(p){var q=projection(p.lat,p.lon);if(q)candidates.push({place:p,p:q});});
     }else if(activeLayers.has('events')){
       runtime.events.filter(visibleFeature).forEach(function(p){var q=projection(p.lat,p.lon);if(q)candidates.push({place:p,p:q});});
@@ -562,6 +582,28 @@
   function interactionEnabled(){return runtime.drawerOpen||activeLayers.size>0||!!runtime.selectedPlace;}
   function installInteraction(){
     var viewport=document.querySelector('.viewport');
+    function interruptStory(e){
+      if(!e.isTrusted || !runtime.story.playing)return;
+      // The Story toggle owns its play/pause transition. If the drawer is
+      // nested inside the viewport, the capture-phase pointer handler runs
+      // before the button's click handler; interrupting here would turn a
+      // Pause click straight back into Play.
+      if(e.target && e.target.closest && e.target.closest('#convergenceStoryToggle'))return;
+      runtime.story.playing=false;
+      document.getElementById('app').dataset.convergenceStory='false';
+      refreshStoryUI();
+    }
+    viewport.addEventListener('pointerdown',interruptStory,true);
+    viewport.addEventListener('wheel',interruptStory,{capture:true,passive:true});
+    document.addEventListener('click',function(e){
+      var manual=e.target.closest('[data-experience-nav], [data-exp-control], [data-card-action], [data-mode], #exploreButton, .convergence-close');
+      if(!manual)return;
+      interruptStory(e);
+      if(e.isTrusted && e.target.closest('[data-experience-nav]') && runtime.drawerOpen)closeConvergenceDrawer();
+    },true);
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape' || e.target===viewport || e.target===document.body)interruptStory(e);
+    },true);
     viewport.addEventListener('pointermove',function(e){
       if(runtime.pointer||!interactionEnabled()){runtime.hoverPlace=null;viewport.style.cursor='';return;}
       runtime.hoverPlace=nearestSelectable(e.clientX,e.clientY);
@@ -632,8 +674,19 @@
     var tags=document.createElement('div');tags.className='convergence-detail-tags';
     function addTag(value){var span=document.createElement('span');span.textContent=String(value);tags.appendChild(span);}
     if(p.type==='city'){
-      cityNeighborhoods(p.id).forEach(addTag);
+      cityNeighborhoods(p.id).forEach(function(name){
+        var button=document.createElement('button');button.type='button';button.textContent=name;
+        button.dataset.neighborhood=name;button.setAttribute('aria-pressed',String(runtime.selectedNeighborhood===name));
+        button.addEventListener('click',function(){
+          runtime.selectedNeighborhood=name;focusGeo(p.lat,p.lon,2);renderPlaceDetail();
+        });
+        tags.appendChild(button);
+      });
       box.appendChild(tags);
+      if(runtime.selectedNeighborhood){
+        var neighborhood=document.createElement('p');neighborhood.textContent=runtime.selectedNeighborhood+' · '+p.name+' · city-centered neighborhood overview';
+        neighborhood.dataset.neighborhoodDetail='true';box.appendChild(neighborhood);
+      }
       var history=document.createElement('ol');history.className='convergence-history';
       ['Early settlement and geographic anchor','Regional network expansion','Modern metropolitan system'].forEach(function(value){
         var li=document.createElement('li');li.textContent=value;history.appendChild(li);
@@ -655,7 +708,7 @@
     if(state.experience==='moon'){
       items=MOON_LANDMARKS.map(function(p){return Object.assign({type:'moon'},p);});context='Lunar landmarks';
     }else{
-      items=CITIES.map(function(p){return Object.assign({type:'city'},p);});context='Cities & human geography';
+      items=CITIES.filter(visibleByRegion).map(function(p){return Object.assign({type:'city'},p);});context='Cities & human geography';
     }
     if(title)title.textContent=context;
     var q=(runtime.search||'').trim().toLowerCase();
@@ -679,7 +732,7 @@
   }
 
   function setOrbitPreset(alt,inc){
-    runtime.sim.enabled=true;runtime.sim.altitudeKm=alt;runtime.sim.inclinationDeg=inc;runtime.sim.elapsed=0;runtime.sim.playing=true;
+    runtime.sim.enabled=true;runtime.sim.altitudeKm=alt;runtime.sim.inclinationDeg=inc;runtime.sim.elapsed=0;runtime.sim.playing=true;runtime.sim.prediction=null;
     refreshSimulationUI();showToast('Orbit preset loaded');
   }
 
@@ -841,7 +894,7 @@
     }
 
     var dpr=Math.min(devicePixelRatio||1,2);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,innerWidth,innerHeight);
-    activeLayers.forEach(function(id){var layer=layerRegistry.get(id);if(layer&&layer.draw)layer.draw();});
+    activeLayers.forEach(function(id){var layer=layerRegistry.get(id);if(layer&&layer.draw)layer.draw({ctx:ctx,project:projection,dataTime:runtime.dataTime,experience:state.experience});});
     drawUrbanInset();drawOrbitSimulation();drawSelected();drawStoryParticles();
     requestAnimationFrame(frame);
   }
@@ -868,14 +921,14 @@
       snapshot:snapshot,
       selectCity:function(id){var p=CITIES.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'city'},p),true);return !!p;},
       selectMoonLandmark:function(id){var p=MOON_LANDMARKS.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'moon'},p),true);return !!p;},
-      setOrbit:function(altitudeKm,inclinationDeg){runtime.sim.enabled=true;runtime.sim.altitudeKm=finiteNumber(altitudeKm,420,160,1000000);runtime.sim.inclinationDeg=finiteNumber(inclinationDeg,0,0,180);runtime.sim.elapsed=0;refreshSimulationUI();return snapshot().orbit;},
+      setOrbit:function(altitudeKm,inclinationDeg){runtime.sim.enabled=true;runtime.sim.altitudeKm=finiteNumber(altitudeKm,420,160,1000000);runtime.sim.inclinationDeg=finiteNumber(inclinationDeg,0,0,180);runtime.sim.elapsed=0;runtime.sim.prediction=null;refreshSimulationUI();return snapshot().orbit;},
       setSimulationTime:function(seconds){runtime.sim.enabled=true;runtime.sim.elapsed=finiteNumber(seconds,0,0,315576000);return snapshot().orbit;},
       predictOrbit:function(altitudeKm,samples){return predictOrbit(altitudeKm,samples);},
       ingestEvent:ingestEvent,
       selectEvent:function(id){var p=runtime.events.find(function(x){return x.id===String(id);});if(p)selectPlace(p,true);return !!p;},
-      clearEvents:function(){runtime.events.length=0;if(runtime.selectedPlace&&runtime.selectedPlace.type==='event')runtime.selectedPlace=null;updateMetrics();renderPlaceDetail();},
+      clearEvents:function(){runtime.events.length=0;clearStaleEventSelection();updateMetrics();renderPlaceDetail();},
       focusGeo:function(lat,lon,zoom){return focusGeo(finiteNumber(lat,0,-90,90),finiteNumber(lon,0,-180,180),finiteNumber(zoom,1.34,.5,3));},
-      setRegion:function(region){var allowed=['global','americas','europe','africa-middle-east','asia-pacific'];runtime.region=allowed.indexOf(region)>=0?region:'global';var select=drawer&&drawer.querySelector('#convergenceRegion');if(select)select.value=runtime.region;updateMetrics();return runtime.region;},
+      setRegion:function(region){var allowed=['global','americas','europe','africa-middle-east','asia-pacific'];runtime.region=allowed.indexOf(region)>=0?region:'global';var select=drawer&&drawer.querySelector('#convergenceRegion');if(select)select.value=runtime.region;updateMetrics();renderPlaces();return runtime.region;},
       listLayers:function(){return Array.from(layerRegistry.values()).map(function(x){return {id:x.id,label:x.label,description:x.description};});},
       listCities:function(){return CITIES.map(function(x){return Object.assign({},x);});},
       listMoonLandmarks:function(){return MOON_LANDMARKS.map(function(x){return Object.assign({},x);});},

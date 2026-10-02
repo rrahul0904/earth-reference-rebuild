@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: production-deploy
@@ -17,27 +18,63 @@ jobs:
   deploy:
     if: >-
       ${{
-        github.event_name == 'workflow_dispatch' ||
         (
+          github.event_name == 'workflow_run' &&
           github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.head_branch == 'main'
-        )
+          github.event.workflow_run.head_branch == 'main' &&
+          github.event.workflow_run.head_repository.full_name == github.repository
+        ) || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
       }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     env:
       VERCEL_ORG_ID: team_zmEezpOKGZy2sH5nqTfO44LD
       VERCEL_PROJECT_ID: prj_UL4T4q0fiT7KdEKoBLai6i44E4YS
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
-      - name: Resolve release revision
+      - name: Resolve current main revision with successful quality run
         id: revision
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          fi
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+            if (context.eventName === 'workflow_run') {
+              const run = context.payload.workflow_run;
+              if (run.head_branch !== 'main' || run.head_repository?.full_name !== `${owner}/${repo}`) {
+                core.setFailed('Production releases accept quality runs from this repository main only.');
+                return;
+              }
+              if (run.event !== 'push') {
+                core.setFailed('Production releases require a push-triggered quality run.');
+                return;
+              }
+              if (run.head_sha !== main.data.commit.sha) {
+                core.setFailed('A newer main revision exists; the older successful run cannot deploy.');
+                return;
+              }
+              core.setOutput('sha', main.data.commit.sha);
+              core.setOutput('quality_run_id', String(run.id));
+              return;
+            }
+            if (context.ref !== 'refs/heads/main') {
+              core.setFailed('Manual release dispatch must target main.');
+              return;
+            }
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner, repo, workflow_id: 'quality.yml', branch: 'main', status: 'success', per_page: 100
+            });
+            const quality = runs.data.workflow_runs.find(run =>
+              run.name === 'quality' && run.event === 'push' && run.head_sha === main.data.commit.sha
+            );
+            if (!quality) {
+              core.setFailed('Current main SHA has no successful push-triggered quality run.');
+              return;
+            }
+            core.setOutput('sha', main.data.commit.sha);
+            core.setOutput('quality_run_id', String(quality.id));
 
       - name: Check deployment authorization
         id: auth
@@ -61,6 +98,19 @@ jobs:
         with:
           ref: ${{ steps.revision.outputs.sha }}
 
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify release source in Chromium before deployment
+        env:
+          EARTH_PORT: 4173
+        run: npm run test:e2e
+        timeout-minutes: 30
+        continue-on-error: false
+
       - name: Stamp certified revision
         shell: bash
         run: |
@@ -76,6 +126,61 @@ jobs:
 
       - name: Pull production configuration
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Capture current production deployment for rollback
+        id: previous
+        shell: bash
+        run: |
+          alias_json="$(curl --silent --show-error --fail --get \
+            --header "Authorization: Bearer $VERCEL_TOKEN" \
+            --data-urlencode "projectId=$VERCEL_PROJECT_ID" \
+            --data-urlencode "teamId=$VERCEL_ORG_ID" \
+            "https://api.vercel.com/v4/aliases/$CANONICAL_HOST")" || {
+              echo "Vercel could not resolve the canonical alias; refusing to deploy without rollback protection." >&2
+              exit 1
+            }
+          alias_name="$(jq -r '.alias // empty' <<< "$alias_json")"
+          alias_project="$(jq -r '.projectId // empty' <<< "$alias_json")"
+          previous_id="$(jq -r '.deploymentId // empty' <<< "$alias_json")"
+          previous_url="$(jq -r '.deployment.url // empty' <<< "$alias_json")"
+          if [ "$alias_name" != "$CANONICAL_HOST" ] || [ "$alias_project" != "$VERCEL_PROJECT_ID" ] || ! [[ "$previous_id" =~ ^dpl_[A-Za-z0-9]+$ ]]; then
+            echo "Canonical alias did not resolve to a deployment in the configured Vercel project; refusing to deploy." >&2
+            exit 1
+          fi
+
+          deployment_json="$(curl --silent --show-error --fail --get \
+            --header "Authorization: Bearer $VERCEL_TOKEN" \
+            --data-urlencode "teamId=$VERCEL_ORG_ID" \
+            --data-urlencode "withGitRepoInfo=true" \
+            "https://api.vercel.com/v13/deployments/$previous_id")" || {
+              echo "Vercel could not verify the current production deployment; refusing to deploy." >&2
+              exit 1
+            }
+          if ! jq -e --arg id "$previous_id" --arg project "$VERCEL_PROJECT_ID" \
+            '.id == $id and .projectId == $project and .readyState == "READY" and .target == "production"' \
+            <<< "$deployment_json" >/dev/null; then
+            echo "Canonical alias target is not a ready production deployment in the configured project; refusing to deploy." >&2
+            exit 1
+          fi
+
+          rollback_url="$(node -e '
+            try {
+              const raw = process.argv[1].trim();
+              const hasScheme = raw.startsWith("https://") || raw.startsWith("http://");
+              const url = new URL(hasScheme ? raw : `https://${raw}`);
+              if (url.protocol !== "https:" || !url.hostname.endsWith(".vercel.app") || url.username || url.password || url.port || !["", "/"].includes(url.pathname) || url.search || url.hash) process.exit(1);
+              process.stdout.write(url.origin);
+            } catch { process.exit(1); }
+          ' "$previous_url" 2>/dev/null)" || rollback_url=""
+          if [ -z "$rollback_url" ]; then
+            echo "Vercel returned no safe immutable rollback URL; refusing to deploy." >&2
+            exit 1
+          fi
+          echo "id=$previous_id" >> "$GITHUB_OUTPUT"
+          echo "url=$rollback_url" >> "$GITHUB_OUTPUT"
+          echo "Previous production deployment $previous_id verified for rollback."
+        env:
+          CANONICAL_HOST: earth-reference-rebuild.vercel.app
 
       - name: Stage certified production artifact without moving domains
         id: deploy
@@ -99,7 +204,7 @@ jobs:
           for attempt in {1..12}; do
             marker="$(curl --silent --show-error "$deployment/release.json" || true)"
             status="$(curl --silent --show-error --output /tmp/deployment.html --write-out '%{http_code}' "$deployment/" || true)"
-            if [ "$status" = "200" ] && [ "$marker" = "$expected" ] && grep -q 'id="app"' /tmp/deployment.html; then
+          if [ "$status" = "200" ] && [ "$marker" = "$expected" ] && grep -q 'id="app"' /tmp/deployment.html; then
               echo "Immutable deployment URL serves certified revision ${{ steps.revision.outputs.sha }}."
               break
             fi
@@ -110,35 +215,209 @@ jobs:
             sleep 5
           done
 
-      - name: Promote verified artifact to production
+      - name: Verify immutable deployment assets and exact release SHA
+        env:
+          EARTH_BASE_URL: ${{ steps.deploy.outputs.url }}
+          EARTH_EXPECTED_SHA: ${{ steps.revision.outputs.sha }}
+        run: npm run verify:release
+
+      - name: Run browser acceptance against immutable deployment
+        env:
+          EARTH_BASE_URL: ${{ steps.deploy.outputs.url }}
+        run: npm run test:e2e
+        timeout-minutes: 30
+
+      - name: Upload immutable candidate browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: earth-production-candidate-browser-evidence
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+
+      - name: Resolve staged candidate deployment identity
+        id: candidate
         shell: bash
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
         run: |
+          deployment_host="$(node -e '
+            try {
+              const raw = process.argv[1].trim();
+              const url = new URL(raw.startsWith("https://") ? raw : `https://${raw}`);
+              if (url.protocol !== "https:" || !url.hostname.endsWith(".vercel.app") || url.username || url.password || url.port || !["", "/"].includes(url.pathname) || url.search || url.hash) process.exit(1);
+              process.stdout.write(url.hostname);
+            } catch { process.exit(1); }
+          ' "$DEPLOYMENT_URL")" || {
+            echo "Vercel CLI returned an unsafe candidate URL." >&2
+            exit 1
+          }
+          deployment_json="$(curl --silent --show-error --fail --get \
+            --header "Authorization: Bearer $VERCEL_TOKEN" \
+            --data-urlencode "teamId=$VERCEL_ORG_ID" \
+            --data-urlencode "withGitRepoInfo=true" \
+            "https://api.vercel.com/v13/deployments/$deployment_host")" || {
+              echo "Vercel could not resolve the staged candidate deployment." >&2
+              exit 1
+            }
+          candidate_id="$(jq -r '.id // empty' <<< "$deployment_json")"
+          if ! jq -e --arg id "$candidate_id" --arg project "$VERCEL_PROJECT_ID" --arg host "$deployment_host" \
+            '.id == $id and .projectId == $project and .url == $host and .readyState == "READY" and .target == "production"' \
+            <<< "$deployment_json" >/dev/null || ! [[ "$candidate_id" =~ ^dpl_[A-Za-z0-9]+$ ]]; then
+            echo "Staged candidate identity, project, or readiness could not be verified." >&2
+            exit 1
+          fi
+          echo "id=$candidate_id" >> "$GITHUB_OUTPUT"
+          echo "Candidate deployment ID $candidate_id verified for the configured project."
+
+      - name: Promote verified artifact to production
+        id: promotion
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ steps.revision.outputs.sha }}
+          QUALITY_RUN_ID: ${{ steps.revision.outputs.quality_run_id }}
+          GH_TOKEN: ${{ github.token }}
+          CANONICAL_HOST: earth-reference-rebuild.vercel.app
+        run: |
+          main_sha="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')"
+          quality_run="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$QUALITY_RUN_ID")"
+          if [ "$main_sha" != "$EXPECTED_SHA" ] || ! jq -e \
+            --arg repository "$GITHUB_REPOSITORY" --arg sha "$EXPECTED_SHA" \
+            '.name == "quality" and .event == "push" and .status == "completed" and .conclusion == "success" and .head_branch == "main" and .head_repository.full_name == $repository and .head_sha == $sha' \
+            <<< "$quality_run" >/dev/null; then
+            echo "main or the exact successful quality run changed after candidate verification; refusing promotion." >&2
+            exit 1
+          fi
+          alias_json="$(curl --silent --show-error --fail --get \
+            --header "Authorization: Bearer $VERCEL_TOKEN" \
+            --data-urlencode "projectId=$VERCEL_PROJECT_ID" \
+            --data-urlencode "teamId=$VERCEL_ORG_ID" \
+            "https://api.vercel.com/v4/aliases/$CANONICAL_HOST")"
+          if ! jq -e --arg alias "$CANONICAL_HOST" --arg project "$VERCEL_PROJECT_ID" \
+            --arg deployment "${{ steps.previous.outputs.id }}" \
+            '.alias == $alias and .projectId == $project and .deploymentId == $deployment' \
+            <<< "$alias_json" >/dev/null; then
+            echo "Production changed during candidate verification; refusing to replace the newer alias." >&2
+            exit 1
+          fi
+          echo "attempted=true" >> "$GITHUB_OUTPUT"
           vercel promote "${{ steps.deploy.outputs.url }}" --yes --token="$VERCEL_TOKEN"
           {
             echo
             echo "Verified immutable artifact promoted to production."
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Verify canonical production URL and exact SHA
+      - name: Confirm production alias points to the promoted candidate
+        shell: bash
+        env:
+          EXPECTED_DEPLOYMENT_ID: ${{ steps.candidate.outputs.id }}
+        run: |
+          alias_json="$(curl --silent --show-error --fail --get \
+            --header "Authorization: Bearer $VERCEL_TOKEN" \
+            --data-urlencode "projectId=$VERCEL_PROJECT_ID" \
+            --data-urlencode "teamId=$VERCEL_ORG_ID" \
+            "https://api.vercel.com/v4/aliases/$CANONICAL_HOST")"
+          if ! jq -e --arg alias "$CANONICAL_HOST" --arg project "$VERCEL_PROJECT_ID" \
+            --arg deployment "$EXPECTED_DEPLOYMENT_ID" \
+            '.alias == $alias and .projectId == $project and .deploymentId == $deployment' \
+            <<< "$alias_json" >/dev/null; then
+            echo "The canonical production alias does not point to the candidate deployment." >&2
+            exit 1
+          fi
+
+      - name: Run full browser acceptance against canonical production
+        if: success()
+        env:
+          EARTH_BASE_URL: https://earth-reference-rebuild.vercel.app
+        run: npm run test:e2e
+        timeout-minutes: 30
+
+      - name: Prove canonical production release SHA and required assets
+        if: success()
+        env:
+          EARTH_EXPECTED_SHA: ${{ steps.revision.outputs.sha }}
+          EARTH_BASE_URL: https://earth-reference-rebuild.vercel.app
+        run: npm run verify:release
+
+      - name: Confirm main remained certified through production acceptance
+        if: success()
+        uses: actions/github-script@v7
+        env:
+          EXPECTED_SHA: ${{ steps.revision.outputs.sha }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+            if (main.data.commit.sha !== process.env.EXPECTED_SHA) {
+              core.setFailed('main advanced during production acceptance; release verification is stale.');
+              return;
+            }
+            core.info(`main remained on ${process.env.EXPECTED_SHA} through production acceptance.`);
+
+      - name: Roll production alias back after failed production verification
+        if: ${{ always() && (failure() || cancelled()) && steps.promotion.outputs.attempted == 'true' && steps.previous.outputs.url != '' }}
         shell: bash
         run: |
-          expected='{"sha":"${{ steps.revision.outputs.sha }}"}'
-          canonical="https://earth-reference-rebuild.vercel.app"
-          for attempt in {1..18}; do
-            marker="$(curl --silent --show-error "$canonical/release.json" || true)"
-            status="$(curl --silent --show-error --output /tmp/production.html --write-out '%{http_code}' "$canonical/" || true)"
-            convergence="$(curl --silent --show-error --output /tmp/convergence.js --write-out '%{http_code}' "$canonical/earth-convergence.js" || true)"
-            if [ "$status" = "200" ] && [ "$convergence" = "200" ] && [ "$marker" = "$expected" ] && grep -q 'id="app"' /tmp/production.html && grep -q 'EarthConvergence' /tmp/convergence.js; then
-              {
-                echo "## Production certification"
-                echo
-                echo "Canonical URL: $canonical"
-                echo "Certified revision: `${{ steps.revision.outputs.sha }}`"
-                echo "Exact release marker verified."
-              } >> "$GITHUB_STEP_SUMMARY"
-              exit 0
+          alias_json="$(curl --silent --show-error --fail --get \
+            --header "Authorization: Bearer $VERCEL_TOKEN" \
+            --data-urlencode "projectId=$VERCEL_PROJECT_ID" \
+            --data-urlencode "teamId=$VERCEL_ORG_ID" \
+            "https://api.vercel.com/v4/aliases/$CANONICAL_HOST")" || {
+              echo "Could not verify the current alias before rollback; refusing to overwrite an unknown deployment." >&2
+              exit 1
+            }
+          alias_id="$(jq -r '.deploymentId // empty' <<< "$alias_json")"
+          if [ "$alias_id" != "${{ steps.candidate.outputs.id }}" ]; then
+            echo "Production no longer points to this candidate; preserving the concurrent deployment and failing for operator review." >&2
+            exit 1
+          fi
+          vercel promote "${{ steps.previous.outputs.url }}" --yes --token="$VERCEL_TOKEN"
+          recovered=false
+          for attempt in {1..12}; do
+            alias_json="$(curl --silent --show-error --fail --get \
+              --header "Authorization: Bearer $VERCEL_TOKEN" \
+              --data-urlencode "projectId=$VERCEL_PROJECT_ID" \
+              --data-urlencode "teamId=$VERCEL_ORG_ID" \
+              "https://api.vercel.com/v4/aliases/$CANONICAL_HOST" || true)"
+            alias_id="$(jq -r '.deploymentId // empty' <<< "$alias_json")"
+            alias_project="$(jq -r '.projectId // empty' <<< "$alias_json")"
+            root_status="$(curl --silent --show-error --output /tmp/canonical-after-rollback.html --write-out '%{http_code}' "$CANONICAL_URL/" || true)"
+            previous_status="$(curl --silent --show-error --output /tmp/previous-deployment.html --write-out '%{http_code}' "${{ steps.previous.outputs.url }}/" || true)"
+            canonical_digest="$(sha256sum /tmp/canonical-after-rollback.html 2>/dev/null | cut -d' ' -f1)"
+            previous_digest="$(sha256sum /tmp/previous-deployment.html 2>/dev/null | cut -d' ' -f1)"
+            if [ "$alias_id" = "${{ steps.previous.outputs.id }}" ] && [ "$alias_project" = "$VERCEL_PROJECT_ID" ] && [ "$root_status" = "200" ] && [ "$previous_status" = "200" ] && [ -s /tmp/canonical-after-rollback.html ] && [ -s /tmp/previous-deployment.html ] && [ -n "$canonical_digest" ] && [ "$canonical_digest" = "$previous_digest" ]; then
+              recovered=true
+              break
             fi
             sleep 5
           done
-          echo "Canonical production URL did not converge to the certified SHA." >&2
-          exit 1
+          if [ "$recovered" != "true" ]; then
+            echo "Rollback promotion returned but canonical alias did not recover to the recorded deployment." >&2
+            exit 1
+          fi
+          {
+            echo "## Rollback completed"
+            echo
+            echo "Production verification failed. The canonical alias and served app shell were confirmed on the recorded prior deployment."
+            echo "Prior deployment ID: ${{ steps.previous.outputs.id }}"
+            echo "Prior deployment: ${{ steps.previous.outputs.url }}"
+            echo "Rejected candidate: ${{ steps.deploy.outputs.url }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ env.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          CANONICAL_HOST: earth-reference-rebuild.vercel.app
+          CANONICAL_URL: https://earth-reference-rebuild.vercel.app
+
+      - name: Upload canonical production browser evidence
+        if: always() && steps.previous.outputs.url != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: earth-canonical-production-browser-evidence
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore

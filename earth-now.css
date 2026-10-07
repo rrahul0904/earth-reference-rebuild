@@ -1,0 +1,164 @@
+.earth-now-panel {
+  margin: 14px 0 18px;
+  padding: 16px;
+  border: 1px solid rgba(194, 238, 242, .14);
+  border-radius: 16px;
+  background: rgba(3, 12, 15, .58);
+}
+
+.earth-now-kicker,
+.earth-now-provider-head,
+.earth-now-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.earth-now-kicker {
+  margin-bottom: 8px;
+  color: rgba(222, 247, 249, .58);
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+.earth-now-demo,
+.earth-now-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 7px;
+  border: 1px solid rgba(224, 248, 249, .16);
+  border-radius: 999px;
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.earth-now-demo {
+  color: rgba(247, 218, 157, .92);
+  border-color: rgba(247, 218, 157, .24);
+  background: rgba(247, 218, 157, .06);
+}
+
+.earth-now-panel h4 {
+  margin: 0;
+  color: rgba(240, 252, 253, .96);
+  font-size: 16px;
+  font-weight: 520;
+}
+
+.earth-now-copy,
+.earth-now-provider p,
+.earth-now-receipt {
+  margin: 6px 0 0;
+  color: rgba(217, 239, 241, .55);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.earth-now-providers {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.earth-now-provider {
+  padding: 10px 11px;
+  border: 1px solid rgba(195, 235, 238, .1);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .018);
+}
+
+.earth-now-provider strong {
+  color: rgba(238, 252, 253, .9);
+  font-size: 11px;
+  font-weight: 540;
+}
+
+.earth-now-state {
+  color: rgba(180, 238, 217, .8);
+}
+
+.earth-now-state.state-cached-provider-down,
+.earth-now-state.state-unavailable {
+  color: rgba(247, 201, 139, .92);
+  border-color: rgba(247, 201, 139, .24);
+}
+
+.earth-now-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.earth-now-actions button,
+.earth-now-event {
+  appearance: none;
+  border: 1px solid rgba(202, 239, 242, .14);
+  color: rgba(233, 249, 250, .78);
+  background: rgba(255, 255, 255, .025);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.earth-now-actions button {
+  min-height: 30px;
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 10px;
+}
+
+.earth-now-actions button:hover,
+.earth-now-actions button:focus-visible,
+.earth-now-event:hover,
+.earth-now-event:focus-visible {
+  border-color: rgba(202, 239, 242, .32);
+  background: rgba(202, 239, 242, .055);
+}
+
+.earth-now-events {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.earth-now-event {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.earth-now-event strong {
+  color: rgba(240, 252, 253, .88);
+  font-size: 10px;
+  font-weight: 520;
+}
+
+.earth-now-event small {
+  color: rgba(212, 236, 238, .48);
+  font-size: 9px;
+}
+
+.earth-now-receipt {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+}
+
+@media (max-width: 720px) {
+  .earth-now-panel {
+    padding: 13px;
+  }
+
+  .earth-now-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .earth-now-actions button {
+    width: 100%;
+  }
+}

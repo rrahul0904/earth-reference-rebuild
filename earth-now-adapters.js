@@ -125,11 +125,7 @@ export function normalizeUsgsGeoJson(feed, receivedAt) {
       summary: bounded(properties.type === 'earthquake' ? 'Observed earthquake event.' : properties.type, 'Observed seismic event.', 300),
       observedAt,
       receivedAt: receivedIso,
-      position: {
-        lat,
-        lon,
-        ...(depthKm === null ? {} : { altitudeKm: -depthKm })
-      },
+      position: { lat, lon },
       sourceRef: safeUrl(properties.url, EARTHQUAKE_LAYER.provider.sourceRef),
       properties: {
         magnitude,

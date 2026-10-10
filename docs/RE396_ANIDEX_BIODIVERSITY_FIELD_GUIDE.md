@@ -1,11 +1,13 @@
-# RE-395 — Anidex biodiversity / visual wildlife field-guide donor
+# RE-396 — Anidex biodiversity / visual wildlife field-guide donor
 
-Status: **UNDERSTAND + DEFINE / research-specification only**  
+Status: **UNDERSTAND + DEFINE + bounded C1 core / not deployed**  
 Canonical destination: `rrahul0904/earth-reference-rebuild`  
-Coordination: Issue #19  
+Coordination: Issue #19 / draft PR #20  
 Source supplied by user: https://www.reddit.com/r/vibecoding/s/RXdKMGsjlY  
 Resolved launch thread: https://www.reddit.com/r/vibecoding/comments/1x2k1j6/visual_animal_site/  
 Observed product: https://anidex.fyi/
+
+> Tracker identity correction: this intake briefly used RE-395 against the then-current RE-394 workbook. A newer canonical tracker landed concurrently and assigned RE-395 to Abhidu. This lane was moved to collision-free **RE-396** before tracker promotion.
 
 ## 1. Evidence boundary
 
@@ -42,16 +44,9 @@ The live page title observed during research frames the product as a field guide
 
 Do not create a duplicate standalone product yet.
 
-`earth-reference-rebuild` already owns:
+`earth-reference-rebuild` already owns interactive Earth-system experiences, geospatial layer composition and point selection, present-day/historical Earth presentation, mobile/browser interaction patterns, evidence/provenance notices, and deterministic fallback behavior.
 
-- interactive Earth-system experiences;
-- geospatial layer composition and point selection;
-- present-day and historical Earth presentation;
-- mobile/browser interaction patterns;
-- evidence/provenance and third-party asset notices;
-- deterministic fallback behavior when rich rendering cannot load.
-
-RE-395 therefore becomes an optional **Life / Wildlife** experience or Earth layer. It should reuse the existing Earth shell and provenance/resilience patterns while contributing a biodiversity-specific domain model.
+RE-396 therefore becomes an optional **Life / Wildlife** experience or Earth layer. It should reuse the existing Earth shell and provenance/resilience patterns while contributing a biodiversity-specific domain model.
 
 ## 4. Competitor / reference scan
 
@@ -200,12 +195,7 @@ There is no generic “animal size” field. Every rendered comparison must iden
 
 Every user-visible fact that can materially affect interpretation needs a `SourceReceipt`. Every visual asset needs explicit rights metadata.
 
-Fail closed when:
-
-- a measurement lacks its source/meaning;
-- a conservation fact lacks source/assessment context;
-- an asset has unknown or incompatible reuse rights;
-- an occurrence would expose a more precise location than its provider returned.
+Fail closed when a measurement lacks its source/meaning, a conservation fact lacks source/assessment context, an asset has unknown/incompatible reuse rights, or an occurrence would expose a more precise location than its provider returned.
 
 ## 9. Roadmap gates
 
@@ -213,15 +203,7 @@ Fail closed when:
 
 Status: **PASS / evidence captured with gaps explicit**
 
-Exit evidence:
-
-- supplied launch behavior captured;
-- visible comment corpus audited;
-- source/provider unknowns separated from facts;
-- internal tracker dedupe performed;
-- canonical Earth mapping selected;
-- clean-room boundary explicit;
-- comparator/provider scan complete enough to define contracts.
+Exit evidence: supplied launch behavior captured; visible comment corpus audited; source/provider unknowns separated from facts; internal tracker dedupe performed; canonical Earth mapping selected; clean-room boundary explicit; comparator/provider scan sufficient to define contracts.
 
 Do not claim: private architecture, source parity, data-provider parity, benchmark parity.
 
@@ -233,7 +215,7 @@ Fixture-first acceptance slice:
 
 `species index → species detail → compare-to-me → nearby fixture → conservation state → provenance drawer`
 
-Use 12–20 original/curated fixtures with field-level source receipts and no dependency on live providers.
+Use 12–20 curated fixtures with field-level source receipts and no dependency on live providers.
 
 Required failure cases:
 
@@ -247,9 +229,11 @@ Required failure cases:
 
 ### C1 — BUILD
 
-Status: **NOT STARTED at dossier commit**
+Status: **STARTED / bounded provider-neutral core present in draft PR #20**
 
-First implementation should add a provider-neutral biodiversity domain module and deterministic fixtures/tests before touching live APIs.
+Current code adds strict source/measurement/conservation validators, human-scale comparison math, privacy-safe occurrence receipt sanitization, provider-obscuration protection, a release asset-rights gate, fixture nearby adapter, and focused negative tests.
+
+This is **not** a runnable product UI and **not** a live-provider integration.
 
 ### C2 — RUNNABLE
 
@@ -273,15 +257,7 @@ Add one provider only after fixture baseline is exact-head green. Prefer iNatura
 
 Status: **NOT STARTED**
 
-No production/completion claim before:
-
-- exact-head tests + browser suite;
-- privacy review;
-- licensing/provenance review;
-- hosted deployment ID/SHA;
-- mobile/desktop UAT;
-- provider degradation and freshness tests;
-- independent evidence review.
+No production/completion claim before exact-head tests + browser suite, privacy review, licensing/provenance review, hosted deployment ID/SHA, mobile/desktop UAT, provider degradation/freshness tests, and independent evidence review.
 
 ### E — ITERATE
 
@@ -300,14 +276,13 @@ Future work should be driven by measured user feedback. Do not preemptively add 
 
 ## 11. First implementation target
 
-Create a deterministic biodiversity core that can be exercised in Node and browser without the network:
+The current bounded implementation is deliberately network-free:
 
-- strict constructors/validators for the contracts above;
-- fixture species with dimension-aware measurements;
-- pure human-scale comparison calculation;
+- strict validators for evidence-bearing contracts;
+- dimension-aware scale comparison;
 - fixture nearby provider preserving obscured/uncertain occurrence data;
-- provenance completeness checker;
+- provenance completeness checks;
 - release-asset rights gate;
 - negative tests for privacy/provenance/measurement failure cases.
 
-Only after that exact-head slice is green should UI integration and a live iNaturalist adapter begin.
+Only after this exact-head slice is green should browser UI integration and a live iNaturalist adapter begin.

@@ -23,8 +23,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Existing smoke suite
         run: npm test
       - name: RE-395 contract and privacy tests

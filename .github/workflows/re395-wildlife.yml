@@ -1,0 +1,31 @@
+name: RE-395 Wildlife Core
+
+on:
+  pull_request:
+    paths:
+      - 'wildlife-core.js'
+      - 'tests/wildlife-core.mjs'
+      - 'docs/RE395_ANIDEX_BIODIVERSITY_FIELD_GUIDE.md'
+      - '.github/workflows/re395-wildlife.yml'
+  push:
+    branches:
+      - 'reverse/anidex-biodiversity-field-guide'
+
+permissions:
+  contents: read
+
+jobs:
+  wildlife-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Existing smoke suite
+        run: npm test
+      - name: RE-395 contract and privacy tests
+        run: node tests/wildlife-core.mjs

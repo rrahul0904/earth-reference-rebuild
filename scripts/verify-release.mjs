@@ -1,8 +1,11 @@
 const HEX_SHA = /^[a-f0-9]{40}$/i;
-const REQUIRED_SCRIPTS = [
-  '/experiences.js', '/share-state.js', '/cinematic-overhaul.js',
-  '/experience-bridge.js', '/earth-convergence.js'
+const REQUIRED_PAGE_SCRIPTS = [
+  '/experiences.js', '/cinematic-overhaul.js', '/experience-bridge.js'
 ];
+const REQUIRED_RUNTIME_ASSETS = [
+  '/share-state.js', '/earth-convergence.js', '/assets/earth/earth_atmos_2048.jpg'
+];
+const DYNAMIC_BRIDGE_ASSETS = ['/share-state.js', '/earth-convergence.js'];
 
 export async function verifyRelease({ baseUrl, expectedSha, fetchImpl = fetch }) {
   if (!HEX_SHA.test(expectedSha || '')) throw new Error('Expected release SHA must be 40 hexadecimal characters');
@@ -18,11 +21,17 @@ export async function verifyRelease({ baseUrl, expectedSha, fetchImpl = fetch })
   const html = await (await get('/')).text();
   if (!/<(?:main|div)\b[^>]*\bid=["']app["']/i.test(html)) throw new Error('The release page does not contain the Earth app shell');
   const scripts = Array.from(html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/gi), match => match[1]);
-  for (const source of REQUIRED_SCRIPTS) if (!scripts.includes(source)) throw new Error(`Required application script is missing: ${source}`);
+  for (const source of REQUIRED_PAGE_SCRIPTS) if (!scripts.includes(source)) throw new Error(`Required application script is missing: ${source}`);
+
+  const bridge = await (await get('/experience-bridge.js')).text();
+  for (const source of DYNAMIC_BRIDGE_ASSETS) {
+    if (!bridge.includes(source)) throw new Error(`Experience bridge does not wire required runtime asset: ${source}`);
+  }
+
   const localAssets = [...new Set([
     ...scripts,
     ...Array.from(html.matchAll(/<link\b[^>]*\bhref=["']([^"']+\.(?:css|svg)(?:\?[^"']*)?)["']/gi), match => match[1]),
-    '/assets/earth/earth_atmos_2048.jpg'
+    ...REQUIRED_RUNTIME_ASSETS
   ])].filter(path => path.startsWith('/'));
   for (const path of localAssets) await get(path);
   return { sha: release.sha, url: base.href, checkedAssets: localAssets };

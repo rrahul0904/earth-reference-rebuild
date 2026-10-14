@@ -21,6 +21,7 @@ test('Earth Now loads as an explicit fixture-only slice without a live claim', a
   await expect(page.locator('#earthNowPanel')).toBeVisible();
   await expect(page.locator('#earthNowPanel')).toContainText('FIXTURE · NO NETWORK');
   await expect(page.locator('#earthNowPanel')).toContainText('not a live-feed claim');
+  await expect(page.locator('#earthNowPanel')).not.toContainText('latest undefined');
   await expect(page.locator('[data-earth-now-event]')).toHaveCount(3);
 
   await page.locator('#earthNowTimeline').evaluate((slider) => { slider.value = '500'; slider.dispatchEvent(new Event('input', { bubbles: true })); });

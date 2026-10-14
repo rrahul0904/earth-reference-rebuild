@@ -175,8 +175,8 @@ function renderPanel() {
   const providers = panel.querySelector('[data-earth-now-providers]');
   const events = panel.querySelector('[data-earth-now-events]');
   const digest = panel.querySelector('[data-earth-now-digest]');
-  const quakeLatest = latestSignal(quakeSignals);
-  const kpLatest = latestSignal(kpSignals);
+  const quakeLatest = latestSignal(quakeState.signals);
+  const kpLatest = latestSignal(kpState.signals);
   const slider = panel.querySelector('#earthNowTimeline');
   const timelineValue = Number(slider.value) / 1000;
   const timelineTime = new Date(timelineAsOf() - (1 - timelineValue) * WINDOW_MS);

@@ -105,6 +105,14 @@
     if(Number.isFinite(min))n=Math.max(min,n);if(Number.isFinite(max))n=Math.min(max,n);
     return n;
   }
+  function setDataTime(value){
+    runtime.dataTime=finiteNumber(value,1,0,1);
+    var input=drawer&&drawer.querySelector('#convergenceDataTime');
+    if(input)input.value=String(Math.round(runtime.dataTime*1000));
+    updateMetrics();
+    window.dispatchEvent(new CustomEvent('earth:timeline',{detail:{value:runtime.dataTime}}));
+    return runtime.dataTime;
+  }
   function cityNeighborhoods(id){
     return {
       cairo:['Historic Cairo','Zamalek','Heliopolis'],
@@ -843,7 +851,7 @@
     var primaryExplore=document.getElementById('exploreButton');
     if(primaryExplore)primaryExplore.addEventListener('click',function(){if(runtime.drawerOpen)closeConvergenceDrawer();});
     drawer.querySelectorAll('[data-convergence-tab]').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.convergenceTab);});});
-    drawer.querySelector('#convergenceDataTime').addEventListener('input',function(e){runtime.dataTime=Number(e.target.value)/1000;updateMetrics();});
+    drawer.querySelector('#convergenceDataTime').addEventListener('input',function(e){setDataTime(Number(e.target.value)/1000);});
     drawer.querySelector('#convergenceRegion').addEventListener('change',function(e){runtime.region=e.target.value;updateMetrics();renderPlaces();showToast(e.target.options[e.target.selectedIndex].text+' filter');});
     drawer.querySelector('#convergenceDataPlay').addEventListener('click',function(e){runtime.dataPlaying=!runtime.dataPlaying;e.target.textContent=runtime.dataPlaying?'Pause time':'Play time';});
     drawer.querySelector('#convergenceClearLayers').addEventListener('click',clearLayers);
@@ -879,7 +887,7 @@
 
   function frame(now){
     var dt=Math.min(.05,(now-runtime.last)/1000);runtime.last=now;
-    if(runtime.dataPlaying){runtime.dataTime=(runtime.dataTime+dt*.045)%1;var dr=drawer&&drawer.querySelector('#convergenceDataTime');if(dr)dr.value=String(Math.round(runtime.dataTime*1000));updateMetrics();}
+    if(runtime.dataPlaying)setDataTime((runtime.dataTime+dt*.045)%1);
     if(runtime.sim.playing)runtime.sim.elapsed+=dt;
     if(runtime.sim.track && state.experience==='orbit'){
       var trackPhase=runtime.sim.elapsed/Math.max(1,orbitPeriodSeconds(runtime.sim.altitudeKm))*Math.PI*2;
@@ -918,6 +926,7 @@
       setLayer:setLayer,
       clearLayers:clearLayers,
       renderAt:renderAt,
+      setDataTime:setDataTime,
       snapshot:snapshot,
       selectCity:function(id){var p=CITIES.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'city'},p),true);return !!p;},
       selectMoonLandmark:function(id){var p=MOON_LANDMARKS.find(function(x){return x.id===id;});if(p)selectPlace(Object.assign({type:'moon'},p),true);return !!p;},

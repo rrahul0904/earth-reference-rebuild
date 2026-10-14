@@ -18,6 +18,10 @@ const convergenceCss = fs.readFileSync(new URL('earth-convergence.css', root),'u
 const livingWorldCore = fs.readFileSync(new URL('living-world-core.js', root),'utf8');
 const livingWorldBrowser = fs.readFileSync(new URL('living-world-browser.js', root),'utf8');
 const deployWorkflow = fs.readFileSync(new URL('.github/workflows/deploy-vercel.yml', root),'utf8');
+const earthNowBrowser = fs.readFileSync(new URL('earth-now-browser.js', root), 'utf8');
+const earthNowRuntime = fs.readFileSync(new URL('server/earth-now/runtime.js', root), 'utf8');
+const earthNowEarthquakesApi = fs.readFileSync(new URL('api/earth-now/earthquakes.js', root), 'utf8');
+const earthNowKpApi = fs.readFileSync(new URL('api/earth-now/planetary-kp.js', root), 'utf8');
 
 for (const id of ['globe','timeline','playButton','sourcesDialog','exploreMenu','mobileTimeline']) assert.ok(html.includes('id="' + id + '"'), 'missing ' + id);
 for (let i=1;i<=5;i++) assert.ok(html.includes('/app-' + i + '.js'), 'missing app-' + i + '.js script');
@@ -35,6 +39,18 @@ assert.ok(js.includes('initWebGL'), 'WebGL renderer missing');
 for (const mode of ['orbit','moon','solar','earthquakes','oceans','civilization']) assert.ok(experiences.includes(mode), 'missing experience mode ' + mode);
 for (const phrase of ['A world in orbit.','Another world. Within reach.','Everything in motion.','Earthquakes. A planet in motion.','An ocean. Always moving.']) assert.ok(experiences.includes(phrase), 'missing reference-derived experience copy: ' + phrase);
 assert.ok(experienceCss.includes('.experience-footer'), 'experience controls styling missing');
+for (const providerPath of ['/api/earth-now/earthquakes', '/api/earth-now/planetary-kp']) {
+  assert.ok(earthNowBrowser.includes(providerPath), 'Earth Now browser must use the same-origin endpoint ' + providerPath);
+}
+assert.ok(earthNowRuntime.includes('MAX_RETRIES = 2'), 'Earth Now upstream retries must stay bounded');
+assert.ok(earthNowRuntime.includes('AbortController'), 'Earth Now upstream requests must have an abortable timeout');
+assert.ok(earthNowRuntime.includes('retry-after'), 'Earth Now provider cooldown must honor Retry-After');
+assert.ok(earthNowRuntime.includes('payload_too_large'), 'Earth Now provider responses must have a byte limit');
+assert.ok(convergence.includes('function setDataTime(value)'), 'Earth Now must use the canonical convergence time state');
+assert.ok(earthNowEarthquakesApi.includes('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson'), 'Earthquake provider URL must be a fixed allowlisted USGS endpoint');
+assert.ok(earthNowKpApi.includes('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'), 'Geomagnetic provider URL must be a fixed allowlisted NOAA endpoint');
+assert.ok(earthNowBrowser.includes('LIVE SOURCES · DEGRADED'), 'Earth Now must distinguish provider health from healthy live data');
+assert.deepEqual(fs.readdirSync(new URL('api/earth-now/', root)).sort(), ['earthquakes.js', 'planetary-kp.js'], 'only HTTP handlers should live under Vercel api/; shared modules belong outside function routing');
 
 assert.ok(cinematic.includes('final-earth-canvas'), 'final photographic Earth canvas missing');
 assert.ok(cinematic.includes('/assets/earth/earth_atmos_2048.jpg'), 'bundled Earth texture missing from critical rendering path');

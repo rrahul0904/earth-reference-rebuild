@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "observedOn": "2026-10-13",
+  "repository": "rrahul0904/earth-reference-rebuild",
+  "branch": "codex/earth-now-live-runtime",
+  "canonicalUrl": "https://earth-reference-rebuild.vercel.app",
+  "mainSha": "88abe555798356e64b24e6422137e8731695e8f1",
+  "productionRuntimeSha": "8a2ad0678fadb793e1f820a64b718a278aaf44f3",
+  "productionReleaseMarker": {
+    "url": "https://earth-reference-rebuild.vercel.app/release.json",
+    "httpStatus": 200,
+    "body": "{\"sha\":\"8a2ad0678fadb793e1f820a64b718a278aaf44f3\"}"
+  },
+  "quality": {
+    "runNumber": 146,
+    "runId": "38339721286",
+    "sha": "88abe555798356e64b24e6422137e8731695e8f1",
+    "conclusion": "success",
+    "browserTests": "40 passed",
+    "artifactId": "11787036870",
+    "artifactName": "earth-browser-evidence",
+    "artifactBytes": 6018739,
+    "artifactSha256": "48acec495d81a1d4a466c6cbcd01f13ee3a2a82c1b8e4a2199920bd16bb60604",
+    "reviewedCapture": "test-results/00-planet-present.png"
+  },
+  "baselineLocalTests": {
+    "smoke": "passed",
+    "livingWorld": "passed",
+    "releaseMetadata": "3 passed"
+  },
+  "pullRequests": {
+    "16": {"state": "MERGED", "mergeSha": "8a2ad0678fadb793e1f820a64b718a278aaf44f3"},
+    "18": {"state": "OPEN_DRAFT", "head": "f796b852e7b932ee183007cbc726f9a2455c007d", "base": "codex/earth-final-integration", "recoveredAsSource": true},
+    "20": {"state": "OPEN_DRAFT", "head": "ddb600fba120056d43835c720fc88457cdc13aff", "base": "main"}
+  },
+  "deployment": {
+    "workflowRun": "38341614610",
+    "conclusion": "failure",
+    "failure": "VERCEL_TOKEN is required",
+    "candidatePreview": null,
+    "rollbackDeployment": null,
+    "mutationAttempted": false
+  },
+  "governance": {"mainProtected": false},
+  "phases": {
+    "baseline": "TESTED",
+    "earthNowFixture": "RECOVERY_IN_PROGRESS",
+    "earthNowLiveRuntime": "NOT_STARTED",
+    "previewProduction": "BLOCKED_EXTERNAL: VERCEL_DEPLOY_AUTHORIZATION"
+  }
+}

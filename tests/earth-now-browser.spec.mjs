@@ -10,6 +10,8 @@ async function ready(page) {
 test('Earth Now loads as an explicit fixture-only slice without a live claim', async ({ page }) => {
   await ready(page);
 
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual([]);
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().eventCount)).toBe(0);
   await expect(page.locator('#app')).toHaveAttribute('data-earth-now-mode', 'fixture');
   expect(await page.evaluate(() => window.EarthNow.mode)).toBe('fixture');
   expect(await page.evaluate(() => window.EarthNow.asOf)).toBe('2026-10-07T18:05:00.000Z');
@@ -26,16 +28,38 @@ test('Earth Now loads as an explicit fixture-only slice without a live claim', a
   await page.locator('#earthNowTimeline').evaluate((slider) => { slider.value = '1000'; slider.dispatchEvent(new Event('input', { bubbles: true })); });
 
   const snapshot = await page.evaluate(() => window.EarthConvergence.snapshot());
-  expect(snapshot.eventCount).toBe(3);
-  expect(snapshot.activeLayers).toContain('events');
+  expect(snapshot.eventCount).toBe(0);
+  expect(snapshot.activeLayers).toEqual([]);
+
+  await page.locator('#earthNowLoadFixtures').click();
+  await expect(page.locator('#convergenceMetricLayers')).toHaveText('1');
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual(['events']);
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().eventCount)).toBe(3);
 
   const digest = await page.evaluate(() => window.EarthNow.getDigest());
   expect(digest).toMatch(/^[a-f0-9]{64}$/);
 });
 
+test('Earth Now fixture refresh preserves the selected events-layer visibility', async ({ page }) => {
+  await ready(page);
+  await page.evaluate(() => window.EarthConvergence.open());
+
+  await page.locator('#earthNowLoadFixtures').click();
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual(['events']);
+  await page.evaluate(() => window.EarthNow.loadFixtures());
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual(['events']);
+
+  await page.locator('[data-layer="events"]').click();
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual([]);
+  await page.evaluate(() => window.EarthNow.loadFixtures());
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual([]);
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().eventCount)).toBe(3);
+});
+
 test('Earth Now isolates provider failure while preserving cached geographic evidence', async ({ page }) => {
   await ready(page);
   await page.evaluate(() => window.EarthConvergence.open());
+  await page.locator('#earthNowLoadFixtures').click();
 
   await page.locator('#earthNowSimulateOutage').click();
   await expect(page.locator('#app')).toHaveAttribute('data-earth-now-provider', 'down');
@@ -59,6 +83,7 @@ test('Earth Now isolates provider failure while preserving cached geographic evi
 test('Earth Now reuses the existing globe event-selection path', async ({ page }) => {
   await ready(page);
   await page.evaluate(() => window.EarthConvergence.open());
+  await page.locator('#earthNowLoadFixtures').click();
 
   const first = page.locator('[data-earth-now-event]').first();
   await expect(first).toContainText('Fixture · northwest Pacific');
@@ -110,6 +135,8 @@ test('Earth Now live mode uses only normalized same-origin provider endpoints', 
 
   await ready(page);
   await page.evaluate(() => window.EarthConvergence.open());
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual([]);
+  await page.locator('[data-layer="events"]').click();
   await page.locator('#earthNowLoadLive').click();
 
   await expect(page.locator('#app')).toHaveAttribute('data-earth-now-mode', 'live');
@@ -117,7 +144,14 @@ test('Earth Now live mode uses only normalized same-origin provider endpoints', 
   await expect(page.locator('#earthNowPanel')).toContainText('cached provider down');
   await expect(page.locator('#earthNowSimulateOutage')).toBeHidden();
   await expect(page.locator('[data-earth-now-event]')).toHaveCount(1);
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual(['events']);
   expect(await page.evaluate(() => window.EarthNow.mode)).toBe('live');
+  await page.locator('[data-layer="events"]').click();
+  await page.evaluate(() => window.EarthNow.loadLive());
+  expect(await page.evaluate(() => window.EarthConvergence.snapshot().activeLayers)).toEqual([]);
   await page.locator('#earthNowPanel').screenshot({ path: 'test-results/earth-now-live-panel.png' });
-  expect(calls.sort()).toEqual(['/api/earth-now/earthquakes', '/api/earth-now/planetary-kp']);
+  expect(calls.sort()).toEqual([
+    '/api/earth-now/earthquakes', '/api/earth-now/earthquakes',
+    '/api/earth-now/planetary-kp', '/api/earth-now/planetary-kp'
+  ]);
 });

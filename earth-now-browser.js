@@ -143,7 +143,6 @@ function injectFixtureEvents(convergence) {
       weight: weightForMagnitude(signal.properties.magnitude)
     });
   }
-  convergence.setLayer('events', true);
   document.getElementById('app').dataset.earthNowEvents = String(quakeSignals.length);
 }
 
@@ -264,6 +263,7 @@ function installPanel(convergence) {
     convergence.setDataTime(1);
     buildStates('healthy');
     injectFixtureEvents(convergence);
+    convergence.setLayer('events', true);
     digestSnapshot(snapshot).then((value) => { snapshotDigest = value; renderPanel(); });
     renderPanel();
   });
@@ -308,7 +308,6 @@ function injectSignals(convergence) {
       weight: weightForMagnitude(signal.properties.magnitude)
     });
   }
-  convergence.setLayer('events', true);
   document.getElementById('app').dataset.earthNowEvents = String(quakeSignals.length);
 }
 
@@ -361,7 +360,6 @@ async function init() {
   const convergence = await waitForConvergence();
   buildStates('healthy');
   installPanel(convergence);
-  injectFixtureEvents(convergence);
   snapshotDigest = await digestSnapshot(snapshot);
   renderPanel();
 

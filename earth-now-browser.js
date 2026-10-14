@@ -15,6 +15,14 @@ import {
 const FIXTURE_AS_OF = '2026-10-07T18:05:00.000Z';
 const WINDOW_MS = 24 * 60 * 60 * 1000;
 
+function timelineAsOf() {
+  return Date.parse(mode === 'fixture' ? FIXTURE_AS_OF : new Date().toISOString());
+}
+
+function formatUtc(milliseconds) {
+  return new Date(milliseconds).toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
+}
+
 const USGS_FIXTURE = Object.freeze({
   type: 'FeatureCollection',
   metadata: { generated: Date.parse('2026-10-07T18:04:00.000Z'), count: 3, title: 'Earth Now deterministic fixture' },
@@ -62,6 +70,7 @@ let kpState = null;
 let snapshot = null;
 let snapshotDigest = '';
 let panel = null;
+let mode = 'fixture';
 
 function waitForConvergence(deadline = Date.now() + 10_000) {
   return new Promise((resolve, reject) => {
@@ -109,7 +118,7 @@ function buildStates(usgsStatus = 'healthy') {
 }
 
 function pulseForTime(iso) {
-  const end = Date.parse(FIXTURE_AS_OF);
+  const end = mode === 'fixture' ? Date.parse(FIXTURE_AS_OF) : Date.now();
   const start = end - WINDOW_MS;
   return Math.max(0, Math.min(1, (Date.parse(iso) - start) / WINDOW_MS));
 }
@@ -151,7 +160,14 @@ function providerRow(label, state, detail) {
   head.append(el('strong', '', label));
   const badge = el('span', `earth-now-state state-${state.displayState}`, state.displayState.replaceAll('-', ' '));
   head.append(badge);
-  row.append(head, el('p', '', detail));
+  const source = el('a', 'earth-now-source', 'Source and coverage');
+  source.href = state.layer.provider.sourceRef;
+  source.target = '_blank';
+  source.rel = 'noopener noreferrer';
+  const foot = el('div', 'earth-now-source-line');
+  const checkedAt = state.provider.checkedAt ?? state.asOf;
+  foot.append(source, el('span', '', `checked ${checkedAt ? formatUtc(Date.parse(checkedAt)) : 'unknown'}`));
+  row.append(head, el('p', '', detail), foot);
   return row;
 }
 
@@ -160,12 +176,23 @@ function renderPanel() {
   const providers = panel.querySelector('[data-earth-now-providers]');
   const events = panel.querySelector('[data-earth-now-events]');
   const digest = panel.querySelector('[data-earth-now-digest]');
+  const quakeLatest = latestSignal(quakeSignals);
+  const kpLatest = latestSignal(kpSignals);
+  const slider = panel.querySelector('#earthNowTimeline');
+  const timelineValue = Number(slider.value) / 1000;
+  const timelineTime = new Date(timelineAsOf() - (1 - timelineValue) * WINDOW_MS);
+  panel.querySelector('[data-earth-now-timeline-time]').textContent = formatUtc(timelineTime.getTime());
   providers.replaceChildren();
   events.replaceChildren();
+  panel.querySelector('.earth-now-demo').textContent = mode === 'fixture' ? 'FIXTURE · NO NETWORK'
+    : (quakeState.provider.status === 'healthy' && kpState.provider.status === 'healthy' ? 'LIVE SOURCES · READ ONLY' : 'LIVE SOURCES · DEGRADED');
+  panel.querySelector('.earth-now-copy').textContent = mode === 'fixture'
+    ? 'Deterministic source-shaped data for testing. It is not a live-feed claim.'
+    : 'Provider feeds are fetched through Earth server endpoints. Each source keeps its own evidence timestamp and health state.';
 
   providers.append(
-    providerRow('USGS earthquakes', quakeState, `${quakeSignals.length} fixture events · observation · provider ${quakeState.provider.status}`),
-    providerRow('NOAA planetary Kp', kpState, `Kp ${latestSignal(kpSignals)?.properties?.kp ?? '—'} · observation · global index, not local aurora`)
+    providerRow('USGS earthquakes', quakeState, `${quakeSignals.length} events · observation · latest ${quakeLatest ? `${quakeLatest.freshness} ${formatUtc(Date.parse(quakeLatest.observedAt))}` : 'no recent observation'} · ${mode === 'fixture' ? 'fixture data' : `${quakeState.provider.detail} · ${quakeState.displayState}`} · global catalog completeness varies by region`),
+    providerRow('NOAA planetary Kp', kpState, `Kp ${kpLatest?.properties?.kp ?? '—'} · observation · latest ${kpLatest ? `${kpLatest.freshness} ${formatUtc(Date.parse(kpLatest.observedAt))}` : 'no recent observation'} · ${mode === 'fixture' ? 'fixture data' : `${kpState.provider.detail} · ${kpState.displayState}`} · global index, not local aurora`)
   );
 
   for (const signal of quakeSignals) {
@@ -174,7 +201,7 @@ function renderPanel() {
     button.dataset.earthNowEvent = signal.id;
     button.append(
       el('strong', '', signal.title),
-      el('small', '', `${signal.freshness ?? 'normalized'} · ${new Date(signal.observedAt).toISOString().slice(11, 16)} UTC`)
+      el('small', '', `${signal.freshness ?? 'normalized'} · ${new Date(signal.observedAt).toISOString().slice(11, 16)} UTC · ${mode === 'fixture' ? 'fixture' : 'USGS observation'}`)
     );
     button.addEventListener('click', () => {
       const selected = window.EarthConvergence.selectEvent(signal.id);
@@ -184,8 +211,12 @@ function renderPanel() {
   }
 
   digest.textContent = snapshotDigest ? `snapshot ${snapshotDigest.slice(0, 12)}…` : 'snapshot digest pending';
-  document.getElementById('app').dataset.earthNowProvider = quakeState.provider.status;
-  document.getElementById('app').dataset.earthNowDisplay = quakeState.displayState;
+  const app = document.getElementById('app');
+  app.dataset.earthNowProvider = quakeState.provider.status;
+  app.dataset.earthNowDisplay = quakeState.displayState;
+  app.dataset.earthNowMode = mode;
+  panel.querySelector('#earthNowSimulateOutage').hidden = mode !== 'fixture';
+  panel.querySelector('#earthNowRestore').hidden = mode !== 'fixture';
 }
 
 function installPanel(convergence) {
@@ -198,9 +229,12 @@ function installPanel(convergence) {
     <div class="earth-now-kicker"><span>EARTH NOW</span><span class="earth-now-demo">FIXTURE · NO NETWORK</span></div>
     <h4>What is happening on Earth?</h4>
     <p class="earth-now-copy">Truth-first browser slice. The data below is deterministic test evidence, not a live-feed claim.</p>
+    <label class="earth-now-timeline-label" for="earthNowTimeline">24-hour signal timeline <output data-earth-now-timeline-time></output></label>
+    <input id="earthNowTimeline" class="earth-now-timeline" type="range" min="0" max="1000" step="1" value="1000" aria-label="Choose a time in the last 24 hours">
     <div class="earth-now-providers" data-earth-now-providers></div>
     <div class="earth-now-actions">
       <button type="button" id="earthNowLoadFixtures">Show fixture signals</button>
+      <button type="button" id="earthNowLoadLive">Load live provider data</button>
       <button type="button" id="earthNowSimulateOutage">Simulate USGS outage</button>
       <button type="button" id="earthNowRestore">Restore provider</button>
     </div>
@@ -212,7 +246,22 @@ function installPanel(convergence) {
   if (hint) hint.insertAdjacentElement('afterend', panel);
   else section.prepend(panel);
 
+  panel.querySelector('#earthNowTimeline').addEventListener('input', (event) => {
+    convergence.setDataTime(Number(event.currentTarget.value) / 1000);
+    const value = Number(event.currentTarget.value) / 1000;
+    const time = new Date(timelineAsOf() - (1 - value) * WINDOW_MS);
+    panel.querySelector('[data-earth-now-timeline-time]').textContent = formatUtc(time.getTime());
+  });
+  window.addEventListener('earth:timeline', (event) => {
+    const value = Math.max(0, Math.min(1, Number(event.detail?.value) || 0));
+    panel.querySelector('#earthNowTimeline').value = String(Math.round(value * 1000));
+    const time = new Date(timelineAsOf() - (1 - value) * WINDOW_MS);
+    panel.querySelector('[data-earth-now-timeline-time]').textContent = formatUtc(time.getTime());
+  });
+
   panel.querySelector('#earthNowLoadFixtures').addEventListener('click', () => {
+    mode = 'fixture';
+    convergence.setDataTime(1);
     buildStates('healthy');
     injectFixtureEvents(convergence);
     digestSnapshot(snapshot).then((value) => { snapshotDigest = value; renderPanel(); });
@@ -220,14 +269,92 @@ function installPanel(convergence) {
   });
 
   panel.querySelector('#earthNowSimulateOutage').addEventListener('click', () => {
-    buildStates('down');
-    renderPanel();
+    setUsgsStatus('down');
   });
 
   panel.querySelector('#earthNowRestore').addEventListener('click', () => {
-    buildStates('healthy');
-    renderPanel();
+    setUsgsStatus('healthy');
   });
+
+  panel.querySelector('#earthNowLoadLive').addEventListener('click', () => loadLive(convergence));
+}
+
+async function setUsgsStatus(status) {
+  const now = mode === 'fixture' ? FIXTURE_AS_OF : new Date().toISOString();
+  quakeState = createLayerState(EARTHQUAKE_LAYER, quakeSignals, createProviderState({
+    providerId: EARTHQUAKE_LAYER.provider.id,
+    status,
+    checkedAt: now,
+    lastSuccessAt: quakeState.provider.lastSuccessAt,
+    detail: status === 'down' ? 'Deterministic provider-outage simulation; cached evidence is preserved.' : 'Provider restored; current data remains as received.'
+  }), now);
+  snapshot = createSnapshot([quakeState, kpState], now);
+  snapshotDigest = await digestSnapshot(snapshot);
+  renderPanel();
+  return quakeState;
+}
+
+function injectSignals(convergence) {
+  convergence.clearEvents();
+  for (const signal of quakeSignals) {
+    if (!signal.position) continue;
+    convergence.ingestEvent({
+      id: signal.id,
+      name: signal.title,
+      region: 'Earth Now · USGS observation',
+      lat: signal.position.lat,
+      lon: signal.position.lon,
+      time: pulseForTime(signal.observedAt),
+      weight: weightForMagnitude(signal.properties.magnitude)
+    });
+  }
+  convergence.setLayer('events', true);
+  document.getElementById('app').dataset.earthNowEvents = String(quakeSignals.length);
+}
+
+async function loadLive(convergence) {
+  const button = panel.querySelector('#earthNowLoadLive');
+  button.disabled = true;
+  button.textContent = 'Contacting declared providers…';
+  try {
+    const [usgsResponse, noaaResponse] = await Promise.all([
+      fetch('/api/earth-now/earthquakes', { headers: { Accept: 'application/json' } }),
+      fetch('/api/earth-now/planetary-kp', { headers: { Accept: 'application/json' } })
+    ]);
+    if (!usgsResponse.ok || !noaaResponse.ok) throw new Error('provider endpoint unavailable');
+    const [usgs, noaa] = await Promise.all([usgsResponse.json(), noaaResponse.json()]);
+    if (usgs.schemaVersion !== 'earth-now-provider/v1' || noaa.schemaVersion !== 'earth-now-provider/v1') throw new Error('invalid provider response');
+    mode = 'live';
+    convergence.setDataTime(1);
+    quakeState = usgs.layerState;
+    kpState = noaa.layerState;
+    quakeSignals = quakeState.signals;
+    kpSignals = kpState.signals;
+    snapshot = createSnapshot([quakeState, kpState], new Date().toISOString());
+    injectSignals(convergence);
+    snapshotDigest = await digestSnapshot(snapshot);
+    renderPanel();
+    document.getElementById('app').dataset.earthNowMode = 'live';
+  } catch {
+    if (mode === 'live') {
+      const now = new Date().toISOString();
+      quakeState = createLayerState(EARTHQUAKE_LAYER, quakeSignals, createProviderState({
+        providerId: EARTHQUAKE_LAYER.provider.id, status: 'down', checkedAt: now,
+        lastSuccessAt: quakeState.provider.lastSuccessAt, detail: 'Earth endpoint unavailable; keeping cached source evidence.'
+      }), now);
+      kpState = createLayerState(PLANETARY_KP_LAYER, kpSignals, createProviderState({
+        providerId: PLANETARY_KP_LAYER.provider.id, status: 'down', checkedAt: now,
+        lastSuccessAt: kpState.provider.lastSuccessAt, detail: 'Earth endpoint unavailable; keeping cached source evidence.'
+      }), now);
+      snapshot = createSnapshot([quakeState, kpState], now);
+      snapshotDigest = await digestSnapshot(snapshot);
+    }
+    renderPanel();
+    panel.querySelector('.earth-now-copy').textContent = 'Earth Now endpoints could not be reached. Previously validated signals remain cached with provider health marked down; deterministic fixtures remain available.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Load live provider data';
+  }
 }
 
 async function init() {
@@ -244,15 +371,16 @@ async function init() {
 
   window.EarthNow = Object.freeze({
     version: 'earth-now/phase-b-fixture-1',
-    mode: 'fixture',
-    asOf: FIXTURE_AS_OF,
+    get mode() { return mode; },
+    get asOf() { return mode === 'fixture' ? FIXTURE_AS_OF : snapshot?.asOf ?? new Date().toISOString(); },
     getSnapshot: () => snapshot,
     getDigest: () => snapshotDigest,
     getQuakeSignals: () => quakeSignals.map((signal) => ({ ...signal })),
     getKpSignals: () => kpSignals.map((signal) => ({ ...signal })),
-    loadFixtures: () => { buildStates('healthy'); injectFixtureEvents(convergence); renderPanel(); return snapshot; },
-    simulateUsgsOutage: () => { buildStates('down'); renderPanel(); return quakeState; },
-    restoreUsgs: () => { buildStates('healthy'); renderPanel(); return quakeState; }
+    loadFixtures: () => { mode = 'fixture'; convergence.setDataTime(1); buildStates('healthy'); injectFixtureEvents(convergence); renderPanel(); return snapshot; },
+    loadLive: () => loadLive(convergence),
+    simulateUsgsOutage: () => setUsgsStatus('down'),
+    restoreUsgs: () => setUsgsStatus('healthy')
   });
 }
 

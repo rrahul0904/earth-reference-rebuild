@@ -65,6 +65,7 @@ function utcTimeTag(value, name) {
 }
 
 function finite(value, name, min, max) {
+  if (value === null || value === undefined || String(value).trim() === '') throw new TypeError(`${name} must be a finite number`);
   const number = Number(value);
   if (!Number.isFinite(number) || number < min || number > max) throw new TypeError(`${name} must be between ${min} and ${max}`);
   return number;
@@ -83,7 +84,9 @@ function safeUrl(value, fallback) {
   } catch {
     return fallback;
   }
-  return parsed.protocol === 'https:' ? parsed.toString() : fallback;
+  return parsed.protocol === 'https:' && parsed.hostname.toLowerCase() === 'earthquake.usgs.gov'
+    ? parsed.toString()
+    : fallback;
 }
 
 export function normalizeUsgsGeoJson(feed, receivedAt) {
@@ -130,7 +133,10 @@ export function normalizeUsgsGeoJson(feed, receivedAt) {
       properties: {
         magnitude,
         depthKm,
-        significance: Number.isFinite(Number(properties.sig)) ? Number(properties.sig) : null,
+        significance: properties.sig !== null && properties.sig !== undefined && String(properties.sig).trim() !== ''
+          && Number.isFinite(Number(properties.sig)) && Number(properties.sig) >= 0 && Number(properties.sig) <= 1000
+          ? Number(properties.sig)
+          : null,
         alert: bounded(properties.alert, '', 24),
         tsunami: properties.tsunami === 1,
         status: bounded(properties.status, '', 40),

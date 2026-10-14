@@ -28,6 +28,12 @@
     "livingWorld": "passed",
     "releaseMetadata": "3 passed"
   },
+  "liveSourceSmoke": {
+    "checkedOn": "2026-10-13",
+    "usgsEarthquakes": {"httpStatus": 200, "sourceStatus": "healthy", "signals": 41, "displayState": "stale", "receiptSchema": "evidence-receipt/v1", "receiptHashPrefix": "becbf917c272"},
+    "noaaPlanetaryKp": {"httpStatus": 200, "sourceStatus": "healthy", "signals": 7, "displayState": "stale", "receiptSchema": "evidence-receipt/v1", "receiptHashPrefix": "572f5c7da724"},
+    "notes": "Provider health describes a successful fetch; signal freshness independently classified this sampled source data as stale."
+  },
   "pullRequests": {
     "16": {"state": "MERGED", "mergeSha": "8a2ad0678fadb793e1f820a64b718a278aaf44f3"},
     "18": {"state": "OPEN_DRAFT", "head": "f796b852e7b932ee183007cbc726f9a2455c007d", "base": "codex/earth-final-integration", "recoveredAsSource": true},
@@ -43,9 +49,9 @@
   },
   "governance": {"mainProtected": false},
   "phases": {
-    "baseline": "TESTED",
-    "earthNowFixture": "RECOVERY_IN_PROGRESS",
-    "earthNowLiveRuntime": "NOT_STARTED",
+    "baseline": "VERIFIED",
+    "earthNowFixture": "TESTED: 26 node tests; 4 focused Chromium tests",
+    "earthNowLiveRuntime": "TESTED LOCALLY: both official provider handlers returned HTTP 200; Preview and exact-head CI pending",
     "previewProduction": "BLOCKED_EXTERNAL: VERCEL_DEPLOY_AUTHORIZATION"
   }
 }

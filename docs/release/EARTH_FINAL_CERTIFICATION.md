@@ -6,6 +6,10 @@
 **Core release status:** **PRODUCTION VERIFIED**  
 **Expansion roadmap status:** **ACTIVE — not all donor/roadmap work is production-complete**
 
+## Superseding observation — 2026-10-13
+
+The certification above records the 2026-10-12 observation and remains historical evidence. A fresh read-only check found `main` at `88abe555798356e64b24e6422137e8731695e8f1`; canonical production continues to serve runtime SHA `8a2ad0678fadb793e1f820a64b718a278aaf44f3` according to `/release.json`. Quality run #146 passed on the current `main` SHA. Earth Now/Wildlife source modules are not present in that deployed runtime. Production workflow run #92 stopped before deployment because `VERCEL_TOKEN` is unavailable. No new Preview, deployment ID, or rollback target was observed. See the date-stamped evidence record [`EARTH_MASTER_IMPLEMENTATION_BASELINE_2026-10-13.md`](EARTH_MASTER_IMPLEMENTATION_BASELINE_2026-10-13.md).
+
 This record distinguishes the certified production baseline from later expansion work. Do not use completion of the core release to imply that every future donor integration or roadmap issue is complete.
 
 ## Certified production baseline

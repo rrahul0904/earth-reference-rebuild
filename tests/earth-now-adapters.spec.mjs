@@ -88,3 +88,21 @@ test('provider adapters fail closed on impossible source values', () => {
     /Kp must be between 0 and 9/
   );
 });
+
+test('USGS links cannot redirect provenance outside the declared provider host', () => {
+  const [signal] = normalizeUsgsGeoJson({
+    type: 'FeatureCollection',
+    features: [{
+      type: 'Feature', id: 'us7000link',
+      properties: { mag: 3, place: 'Example', time: Date.parse(RECEIVED), url: 'https://attacker.invalid/claim', type: 'earthquake' },
+      geometry: { type: 'Point', coordinates: [0, 0] }
+    }]
+  }, RECEIVED);
+  assert.equal(signal.sourceRef, EARTHQUAKE_LAYER.provider.sourceRef);
+});
+
+test('provider adapters reject null numeric observations instead of coercing them to zero', () => {
+  assert.throws(() => normalizeNoaaPlanetaryKp([
+    { time_tag: '2026-10-07T15:00:00', Kp: null, a_running: 7, station_count: 8 }
+  ], RECEIVED), /Kp must be a finite number/);
+});

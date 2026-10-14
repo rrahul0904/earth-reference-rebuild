@@ -1,5 +1,17 @@
 # Earth Now — live-signals reverse-engineering dossier
 
+## Implementation update — 2026-10-13
+
+The fixture-certified slice from PR #18 has been recovered onto `codex/earth-now-live-runtime`. Phase 2 adds same-origin server functions at `/api/earth-now/earthquakes` and `/api/earth-now/planetary-kp`. The browser does not contact source hosts directly. Both routes return `earth-signal/v1` layer state plus an `evidence-receipt/v1` containing source, coverage, observation/receipt timestamps, freshness, and a deterministic content hash.
+
+The upstreams are fixed in code: USGS's real-time 2.5-day GeoJSON feed and NOAA SWPC's planetary K-index JSON. Earthquake entries and Kp observations are limited to the most recent 24 hours in the API response. The server bounds bytes, validates normalized schemas, times out source requests, applies at most two exponential retries, honors `Retry-After` cooldowns, caches successful data (five minutes for USGS; fifteen for Kp), and returns validated cached evidence with provider-down state when refresh fails. Cold-start failures return an empty unavailable state rather than invented values. No credentials or user coordinates are involved.
+
+The current NOAA endpoint returns an array of objects with `time_tag`, `Kp`, `a_running`, and `station_count`. NOAA's 2026 format notice documents the move from header-row arrays to keyed JSON objects, and NOAA's product page says estimated 3-hour planetary Kp is derived from a subset of ground magnetometers. Earth presents this as a planetary observation, not a local aurora reading or forecast. See [USGS real-time GeoJSON feeds](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php), [USGS event service documentation](https://earthquake.usgs.gov/fdsnws/event/1/), [NOAA planetary K-index product](https://www.spaceweather.gov/products/planetary-k-index), [NOAA SWPC data format notice 26-21](https://www.weather.gov/media/notification/pdf_2026/scn26-21_Data_Format_Changes_Impacting_SWPC_Products.pdf), and [Vercel Node.js Functions](https://vercel.com/docs/functions/runtimes/node-js).
+
+This is implementation and local verification evidence only. No Vercel Preview or production deployment has been authorized or verified; the missing `VERCEL_TOKEN` remains a release blocker.
+
+When a non-production Vercel Preview URL is available, run `EARTH_BASE_URL=<preview-url> npm run test:e2e -- --grep "Vercel Preview provider functions"` to test the deployed functions without intercepting their network calls. The normal CI browser suite stays deterministic and uses fixture/mocked same-origin responses.
+
 Snapshot: 2026-10-07  
 Tracking issue: #17  
 Implementation branch: `reverse/earth-now-live-signals`  

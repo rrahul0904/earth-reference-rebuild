@@ -38,9 +38,9 @@ This is the verified starting receipt for the current implementation. Earlier ce
 
 | Phase | State | Evidence / next gate |
 | --- | --- | --- |
-| 0 — baseline and recovery | TESTED | Current main and production receipts above; baseline suite passes; current browser artifact reviewed. Issue #12 reconciliation and tracker certification update are in progress. |
-| 1 — Earth Now fixture vertical | IMPLEMENTED on source PR #18; recovery in progress | Reapply the 12 feature commits to this current-main branch, resolve integration conflicts, run contracts and browser acceptance. |
-| 2 — live USGS/NOAA runtime | NOT STARTED | Only after Phase 1 browser acceptance. Verify official source API documentation; implement bounded same-origin server endpoints and provider-down cache behavior. |
+| 0 — baseline and recovery | VERIFIED | Current main and production receipts above; baseline suite passes; current browser artifact reviewed. Issue #12 was commented with merge evidence and closed; historical issue text remains available. |
+| 1 — Earth Now fixture vertical | TESTED | The 12 feature commits from PR #18 replayed cleanly. Contracts pass (26 node tests across the suite); focused Chromium Earth Now tests pass (4/4), including fixture truth, provider outage, event selection, shared 24-hour timeline, and mocked same-origin live mode. |
+| 2 — live USGS/NOAA runtime | TESTED LOCALLY; Preview pending | Same-origin Vercel functions, bounded upstream fetch, exponential retry/cooldown, TTL cache, stale-provider-down states, evidence receipts, source links, and 24-hour timeline integration are implemented. Both actual handlers returned HTTP 200 against the official feeds with validated signals and receipts; the sampled feed data classified as stale, and the UI preserves that freshness state. Exact-head hosted CI and Vercel Preview remain next. |
 | Preview / production | BLOCKED EXTERNAL | Vercel authorization and deployment evidence unavailable; do not claim deployment readiness or production verification. |
 
 Machine-readable mirror: [`earth-master-implementation-ledger.json`](earth-master-implementation-ledger.json).

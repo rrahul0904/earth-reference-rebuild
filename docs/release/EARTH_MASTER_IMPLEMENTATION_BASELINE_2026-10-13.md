@@ -27,7 +27,7 @@ This is the verified starting receipt for the current implementation. Earlier ce
 ## GitHub reconciliation
 
 - PR #11 and PR #13 are merged; integration PR #16 merged at runtime SHA `8a2ad0678fadb793e1f820a64b718a278aaf44f3`.
-- PR #18 (Earth Now) remains open/draft, head `f796b852e7b932ee183007cbc726f9a2455c007d`, based on stale integration commit `3e4340c23cb3f43187e2a85bbcee5bd70d3016b8`; its 12 commits are recovered as source material, not merged blindly.
+- PR #18 (Earth Now) was open/draft at baseline, head `f796b852e7b932ee183007cbc726f9a2455c007d`, based on stale integration commit `3e4340c23cb3f43187e2a85bbcee5bd70d3016b8`; its 12 commits were recovered as source material, not merged blindly. It is now closed and linked to its successor PR #21, preserving the original history.
 - PR #20 (RE-396 / biodiversity) remains open/draft, head `ddb600fba120056d43835c720fc88457cdc13aff`, based on old `main` `e314e8c015bb87a481985b195148c2585b0f10bf`; the deterministic provider contracts and tests exist, but browser product UI is not yet included.
 - Issue #12's checklist still claims exact-head verification and merge are outstanding, despite PR #13 and #16 being merged. Its status must be reconciled with the merge evidence while retaining the issue history.
 - GitHub Actions production deploy run #92 failed at authorization because `VERCEL_TOKEN` is missing; no repository secret is configured. The failure occurred before deployment, and no deployment mutation was attempted.
@@ -42,5 +42,7 @@ This is the verified starting receipt for the current implementation. Earlier ce
 | 1 — Earth Now fixture vertical | TESTED | The 12 feature commits from PR #18 replayed cleanly. Contracts pass (26 node tests across the suite); focused Chromium Earth Now tests pass (4/4), including fixture truth, provider outage, event selection, shared 24-hour timeline, and mocked same-origin live mode. |
 | 2 — live USGS/NOAA runtime | TESTED LOCALLY; Preview pending | Same-origin Vercel functions, bounded upstream fetch, exponential retry/cooldown, TTL cache, stale-provider-down states, evidence receipts, source links, and 24-hour timeline integration are implemented. Both actual handlers returned HTTP 200 against the official feeds with validated signals and receipts; the sampled feed data classified as stale, and the UI preserves that freshness state. Exact-head hosted CI and Vercel Preview remain next. |
 | Preview / production | BLOCKED EXTERNAL | Vercel authorization and deployment evidence unavailable; do not claim deployment readiness or production verification. |
+
+Current implementation PR: [#21](https://github.com/rrahul0904/earth-reference-rebuild/pull/21), head `30af7be300a06d2e9b57bdf9d9acf4bb9030ec1c`. Issue #17 now links the implementation and remaining gates. GitHub exact-head quality is pending.
 
 Machine-readable mirror: [`earth-master-implementation-ledger.json`](earth-master-implementation-ledger.json).
